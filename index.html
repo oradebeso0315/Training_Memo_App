@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>慧舟會 練習ログ</title>
+<style>
+:root{
+  --bg:#0a0d12;
+  --panel:#12161d;
+  --panel2:#181d26;
+  --border:#232a35;
+  --text:#e8ecf1;
+  --sub:#5a6878;
+  --accent:#c8a06e;
+  --good:#5cb88a;
+  --bad:#e0524d;
+  --font-display:'Shippori Mincho','Noto Serif JP',serif;
+  --font-body:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  padding-bottom:60px;
+}
+.app{max-width:640px;margin:0 auto;padding:0 16px;}
+
+.header{
+  padding:28px 16px 20px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  margin-bottom:4px;
+}
+.header .eyebrow{
+  font-size:10px;letter-spacing:6px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:8px;
+}
+.header h1{
+  font-family:var(--font-display);
+  font-size:28px;font-weight:700;letter-spacing:2px;
+  color:#fff;
+}
+.header .sub{
+  font-size:10px;letter-spacing:3px;color:var(--sub);
+  margin-top:6px;text-transform:uppercase;
+}
+
+.dojo-select{
+  display:flex;gap:8px;padding:16px 0 0;
+  max-width:640px;margin:0 auto;
+}
+.dojo-btn{
+  flex:1;padding:12px 8px;border-radius:10px;
+  border:1px solid var(--border);background:var(--panel);
+  color:var(--sub);font-size:12px;font-family:var(--font-body);
+  cursor:pointer;text-align:center;transition:all .2s;
+  line-height:1.4;
+}
+.dojo-btn.active{
+  border-color:var(--accent);color:#fff;background:var(--panel2);
+}
+.dojo-btn .dojo-sub{font-size:9px;color:var(--sub);margin-top:2px;}
+
+.tabs{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:14px 0 0;
+  max-width:640px;margin:0 auto;
+}
+.tab{
+  padding:10px 2px;border-radius:8px;border:none;
+  background:var(--panel);color:var(--sub);
+  font-size:10px;font-family:var(--font-body);cursor:pointer;
+  letter-spacing:0.5px;transition:all .2s;
+  white-space:nowrap;
+}
+.tab.active{background:var(--accent);color:#0a0d12;font-weight:700;}
+
+.content{padding:16px 0 0;}
+
+.card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin-bottom:12px;
+}
+.card-title{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--sub);margin-bottom:12px;
+}
+.card-title-row{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;
+}
+.card-title-row .card-title{margin-bottom:0;}
+.period-select{
+  background:var(--panel2);border:1px solid var(--border);
+  color:#fff;font-size:11px;font-family:var(--font-body);
+  padding:5px 8px;border-radius:6px;outline:none;cursor:pointer;
+}
+.period-select:focus{border-color:var(--accent);}
+
+.cal-legend{
+  display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;
+  font-size:10px;color:var(--sub);
+}
+.cal-legend .legend-item{display:flex;align-items:center;gap:5px;}
+.cal-legend .legend-dot{width:9px;height:9px;border-radius:50%;}
+
+/* ── WEEKLY GRID CALENDAR (image-style) ── */
+.grid-wrap{
+  display:flex;overflow-x:auto;
+  border:1px solid var(--border);border-radius:8px;
+}
+.grid-hours{
+  flex-shrink:0;width:34px;border-right:1px solid var(--border);
+}
+.grid-hours-body{position:relative;}
+.grid-hour-label{
+  position:absolute;left:0;right:0;transform:translateY(-50%);
+  font-size:9px;color:var(--sub);text-align:center;
+}
+.grid-days{
+  display:flex;flex:1;min-width:0;
+}
+.grid-day-col{
+  flex:1;min-width:54px;border-right:1px solid var(--border);
+  position:relative;
+}
+.grid-day-col:last-child{border-right:none;}
+.grid-day-header{
+  height:24px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--accent);font-weight:700;
+  border-bottom:1px solid var(--border);
+  background:var(--panel2);
+  position:sticky;top:0;
+}
+.grid-day-body{position:relative;background:var(--bg);}
+.grid-line{
+  position:absolute;left:0;right:0;height:1px;background:var(--border);
+  opacity:.5;
+}
+.grid-class{
+  position:absolute;left:1px;right:1px;border-radius:5px;
+  border:1px solid;overflow:hidden;cursor:default;
+  padding:3px 4px;box-sizing:border-box;
+  color:#fff;
+}
+.grid-class.is-free{color:var(--sub);z-index:0;}
+.grid-class.has-note{box-shadow:0 0 0 2px var(--good) inset;}
+.grid-class-name{
+  font-size:9px;line-height:1.2;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.grid-class.is-free .grid-class-name{font-weight:400;}
+.grid-class-time{font-size:8px;opacity:.85;margin-top:1px;}
+.grid-class-mark{
+  position:absolute;top:2px;right:3px;font-size:9px;color:var(--good);
+  background:#0a0d12cc;border-radius:50%;width:13px;height:13px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:20px;
+}
+.modal{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:14px;padding:20px;max-width:480px;width:100%;
+  max-height:85vh;overflow-y:auto;
+}
+.modal-header{margin-bottom:14px;}
+.modal-header .modal-class{
+  font-family:var(--font-display);font-size:18px;color:#fff;font-weight:700;
+}
+.modal-header .modal-time{font-size:11px;color:var(--sub);margin-top:4px;}
+.modal-header .modal-skill{
+  display:inline-block;font-size:9px;letter-spacing:2px;
+  padding:3px 10px;border-radius:6px;margin-top:8px;
+  text-transform:uppercase;
+}
+textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);padding:12px;
+  font-size:13px;font-family:var(--font-body);resize:vertical;
+  outline:none;min-height:100px;line-height:1.7;
+}
+textarea:focus{border-color:var(--accent);}
+.modal-actions{display:flex;gap:8px;margin-top:12px;}
+.btn{
+  padding:10px 16px;border-radius:8px;border:none;
+  font-size:12px;font-family:var(--font-body);cursor:pointer;
+  font-weight:700;letter-spacing:1px;transition:all .15s;
+}
+.btn-primary{background:var(--accent);color:#0a0d12;}
+.btn-primary:hover{background:#d8b07e;}
+.btn-secondary{background:var(--panel2);color:var(--sub);}
+.btn-secondary:hover{color:#fff;}
+.btn-full{flex:1;}
+.btn:disabled{opacity:.4;cursor:default;}
+
+.fb-box{
+  margin-top:14px;padding:14px;border-radius:10px;
+  background:#0d1a14;border:1px solid #1e3a2a;
+}
+.fb-box.loading{
+  background:var(--panel2);border-color:var(--border);
+  text-align:center;color:var(--sub);font-size:12px;
+}
+.fb-box .fb-label{
+  font-size:9px;letter-spacing:3px;color:var(--good);
+  text-transform:uppercase;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.fb-box .fb-text{font-size:13px;line-height:1.8;color:#cde8d8;white-space:pre-wrap;}
+.fb-box .fb-error{color:var(--bad);font-size:12px;}
+
+/* ── TODAY'S FOCUS ── */
+.focus-highlight{
+  background:linear-gradient(135deg, #1a140c, #241a10);
+  border:1px solid var(--accent);border-radius:14px;
+  padding:28px 20px;text-align:center;margin-bottom:14px;
+}
+.focus-label{
+  font-size:10px;letter-spacing:4px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:12px;
+}
+.focus-main{
+  font-family:var(--font-display);
+  font-size:24px;font-weight:700;color:#fff;line-height:1.5;
+}
+.focus-reason{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;
+}
+.focus-reason-label{
+  font-size:9px;letter-spacing:3px;color:var(--sub);
+  text-transform:uppercase;margin-bottom:8px;
+}
+.focus-reason-text{font-size:13px;line-height:1.8;color:#ccc;white-space:pre-wrap;}
+
+.radar-wrap{display:flex;flex-direction:column;align-items:center;}
+.radar-svg{width:100%;max-width:340px;}
+.radar-legend{
+  display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;justify-content:center;
+}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+.skill-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:10px;
+}
+.skill-label{
+  width:64px;font-size:12px;color:#fff;flex-shrink:0;
+}
+.skill-bar-track{
+  flex:1;height:8px;background:var(--panel2);border-radius:4px;
+  overflow:hidden;position:relative;
+}
+.skill-bar-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+.skill-bar-goal{
+  position:absolute;top:-2px;bottom:-2px;width:2px;background:#fff;
+}
+.skill-val{font-size:11px;color:var(--sub);width:70px;text-align:right;flex-shrink:0;}
+
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.kpi-label{font-size:9px;letter-spacing:2px;color:var(--sub);text-transform:uppercase;margin-bottom:4px;}
+.kpi-val{font-size:18px;font-weight:900;color:#fff;}
+.kpi-val .unit{font-size:11px;color:var(--accent);margin-left:2px;}
+
+.goal-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+}
+.goal-label{width:80px;font-size:13px;color:#fff;}
+.goal-input{
+  flex:1;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;color:#fff;font-size:13px;
+  font-family:var(--font-body);outline:none;
+}
+.goal-input:focus{border-color:var(--accent);}
+.goal-unit{font-size:11px;color:var(--sub);width:30px;}
+
+.setup-box{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;margin-bottom:12px;
+}
+.setup-box.connected{border-color:var(--good);}
+.setup-box .status{
+  display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;
+}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--bad);}
+.status-dot.on{background:var(--good);}
+.setup-box input{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;color:#fff;font-size:12px;
+  font-family:monospace;outline:none;margin-bottom:8px;
+}
+.setup-box input:focus{border-color:var(--accent);}
+.setup-help{font-size:11px;color:var(--sub);line-height:1.7;margin-top:10px;}
+.setup-help a{color:var(--accent);text-decoration:none;}
+.setup-help a:hover{text-decoration:underline;}
+
+.empty{
+  text-align:center;color:var(--sub);font-size:12px;
+  padding:32px 16px;line-height:1.8;
+}
+
+.note-item{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:10px;padding:14px;margin-bottom:10px;
+}
+.note-item-head{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
+  gap:8px;
+}
+.note-item-meta{font-size:10px;color:var(--sub);}
+.note-item-skill{
+  font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:6px;
+  text-transform:uppercase;white-space:nowrap;
+}
+.note-item-text{font-size:13px;line-height:1.7;color:#ccc;white-space:pre-wrap;}
+.note-item-fb{
+  margin-top:10px;padding:10px 12px;border-radius:8px;
+  background:#0d1a14;border:1px solid #1e3a2a;
+  font-size:12px;line-height:1.7;color:#bcdccb;white-space:pre-wrap;
+}
+.note-item-actions{display:flex;gap:8px;margin-top:8px;}
+.note-item-actions button{
+  background:none;border:none;font-size:11px;cursor:pointer;color:var(--sub);
+}
+.note-item-actions button:hover{color:#fff;}
+
+footer{
+  text-align:center;color:var(--sub);font-size:10px;
+  letter-spacing:2px;padding:24px 0;
+}
+
+/* ── PAST CALENDAR (month grid) ── */
+.month-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.month-nav .month-label{
+  font-family:var(--font-display);font-size:18px;color:#fff;
+  font-weight:700;letter-spacing:2px;
+}
+.month-nav button{
+  background:var(--panel2);border:1px solid var(--border);
+  color:var(--accent);width:32px;height:32px;border-radius:8px;
+  font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.month-nav button:hover{border-color:var(--accent);}
+.month-nav-selects{
+  display:flex;gap:6px;flex:1;justify-content:center;
+}
+.month-nav-selects .period-select{
+  font-size:13px;font-weight:700;padding:6px 8px;
+}
+.month-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+}
+.month-dow{
+  text-align:center;font-size:10px;color:var(--sub);
+  letter-spacing:1px;padding-bottom:4px;
+}
+.month-cell{
+  aspect-ratio:1;border-radius:8px;background:var(--panel2);
+  border:1px solid var(--border);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  font-size:12px;color:var(--sub);position:relative;transition:all .15s;
+  gap:2px;
+}
+.month-cell:hover{border-color:var(--accent);}
+.month-cell.empty{background:transparent;border:none;cursor:default;}
+.month-cell.today{border-color:var(--accent);color:#fff;}
+.month-cell.has-record{
+  background:#1a2a20;border-color:var(--good);color:#fff;
+}
+.month-cell .mark{
+  width:8px;height:8px;border-radius:50%;background:var(--good);
+  position:absolute;bottom:5px;
+}
+.past-summary{
+  margin-top:14px;
+}
+.past-summary-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;border-radius:8px;background:var(--panel2);
+  margin-bottom:6px;cursor:pointer;border:1px solid transparent;
+}
+.past-summary-item:hover{border-color:var(--accent);}
+.past-summary-date{font-size:12px;color:#fff;}
+.past-summary-text{
+  font-size:11px;color:var(--sub);flex:1;margin-left:12px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;
+}
+
+/* ── CLASS PICKER (note modal) ── */
+.class-picker{
+  display:flex;flex-direction:column;gap:6px;margin-bottom:4px;
+}
+.class-pick-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;background:var(--panel2);
+  border:1px solid var(--border);cursor:pointer;transition:all .12s;
+}
+.class-pick-item:hover{border-color:var(--accent);}
+.class-pick-item input[type=checkbox]{
+  width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;
+}
+.class-pick-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.class-pick-name{flex:1;font-size:12px;color:#fff;}
+.class-pick-time{font-size:10px;color:var(--sub);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">和術慧舟會 / Training Log</div>
+  <h1 id="dojoTitle">練習記録</h1>
+  <div class="sub">あなた専用の練習ログ＆スキル分析</div>
+</div>
+
+<div class="app">
+  <div class="dojo-select" id="dojoSelect"></div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="calendar">カレンダー</button>
+    <button class="tab" data-tab="focus">今日の意識</button>
+    <button class="tab" data-tab="skill">スキル</button>
+    <button class="tab" data-tab="history">ノート</button>
+    <button class="tab" data-tab="past">過去実績</button>
+    <button class="tab" data-tab="goal">目標設定</button>
+  </div>
+  <div class="content" id="content"></div>
+  <footer>WAJUTSU KEISHUKAI · LOCAL STORAGE ONLY</footer>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const SKILL_META = {
+  striking:{label:"打撃", hex:"#e0524d"},
+  jiujitsu:{label:"柔術", hex:"#4d8b6e"},
+  grappling:{label:"組み", hex:"#4d7be0"},
+  mma:{label:"MMA", hex:"#b08ae0"},
+};
+const SKILL_KEYS = ["striking","jiujitsu","grappling","mma"];
+
+// クラスごとの表示固有色（画像のスケジュール表に準拠）
+const CLASS_COLORS = {
+  "フリートレーニング":"#3a3f4a",
+  // KIX 新宿
+  "キック初級":"#3eb8c8",
+  "キック超初級":"#7fd4e0",
+  "サンドバックミット":"#e8918a",
+  "グラップリング初級":"#8b6db5",
+  "グラップリング超初級":"#c5b8e0",
+  "グラップリング":"#4a3a6a",
+  "グラップリングテクニック":"#4a3a6a",
+  "サーキット":"#e02020",
+  "ライトスパー":"#cfe3ee",
+  "キックボクシングフォーム指導フリーミット":"#a8d8e8",
+  // KIX 駒沢
+  "キッズ":"#f0e040",
+  "フィットネス":"#f0c8a8",
+  "MMA初級":"#e8943a",
+  "MMA":"#e8943a",
+  "MMAスパー":"#f0c8a0",
+  // HEARTS 新宿
+  "高強度サーキット":"#e02020",
+  "アマチュア選手志望練習":"#6a6a6a",
+  "キックテクニック":"#3eb8c8",
+  "キック上級":"#1565c0",
+  "柔術オールクラス":"#8fbf8f",
+  "柔術スパー":"#4d8b6e",
+  "柔術テクニック":"#4d8b6e",
+  "グラップリングスパー":"#4a3a6a",
+  "グラップリング中級":"#8b6db5",
+  "MMAレスリング":"#e8943a",
+  "MMAテクニック":"#b08ae0",
+  "MMA初級ク":"#e8943a",
+  "ボクシングテクニック":"#e0524d",
+  // ゴンズジム（過去）
+  "寝技打込み":"#4d8b6e","寝技スパー":"#3a6a52",
+  "キック打込み":"#e0524d","キックスパー":"#b03c38",
+  "組み打込み":"#4d7be0","組みスパー":"#3a5cb0",
+  "ミット&寝技打込み":"#6ba88a",
+  "MMA打込み":"#b08ae0",
+  "着あり寝技打込み":"#8b6db5","着ありスパー":"#6a5a8b",
+};
+function getClassColor(className){
+  return CLASS_COLORS[className] || SKILL_META[getSkill(className)].hex;
+}
+// 背景色の明度に応じて読みやすい文字色を返す
+function getTextColorFor(hex){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16);
+  const g = parseInt(h.substring(2,4),16);
+  const b = parseInt(h.substring(4,6),16);
+  const luminance = (0.299*r + 0.587*g + 0.114*b)/255;
+  return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+}
+
+const SKILL_MAP = {
+  "高強度サーキット":"striking","キックテクニック":"striking","ライトスパー":"striking",
+  "ボクシングテクニック":"striking","キック上級":"striking","キック":"striking",
+  "柔術オールクラス":"jiujitsu","柔術スパー":"jiujitsu","柔術テクニック":"jiujitsu",
+  "グラップリングテクニック":"grappling","グラップリングスパー":"grappling",
+  "グラップリング中級":"grappling","MMAレスリング":"grappling","組み技スパー":"grappling",
+  "MMA初級":"mma","MMAテクニック":"mma","アマチュア選手志望練習":"mma","MMAスパー":"mma",
+  "フリーウェイト":"mma","ウェイトトレーニング":"mma","ストレッチ":"mma",
+  "打撃クラス":"striking","打撃スパー":"striking",
+  "極めクラス":"jiujitsu","極めスパー":"jiujitsu",
+  "投げクラス":"grappling","投げスパー":"grappling",
+  "総合スパー":"mma","初心者クラス":"mma","体験会":"mma",
+  // KIX 新宿・駒沢で使用するクラス
+  "フリートレーニング":"mma",
+  "高強度オールクラス":"striking",
+  "フィットネス":"mma",
+  "サンドバックミット":"striking",
+  "キック初級":"striking","キック超初級":"striking",
+  "キックボクシングフォーム作りプリーミット":"striking",
+  "キックボクシングフォーム指導フリーミット":"striking",
+  "サーキット":"striking",
+  "グラップリング初級":"grappling","グラップリング超初級":"grappling",
+  "グラップリング":"grappling","グラップリングテクニック":"grappling",
+  "キッズ":"mma",
+  "サンドバック":"striking",
+  "MMA":"mma","MMAスパー":"mma",
+  // ゴンズジム（過去）で使用するクラス
+  "寝技打込み":"jiujitsu","寝技スパー":"jiujitsu",
+  "キック打込み":"striking","キックスパー":"striking",
+  "組み打込み":"grappling","組みスパー":"grappling",
+  "ミット&寝技打込み":"jiujitsu",
+  "MMA打込み":"mma",
+  "着あり寝技打込み":"jiujitsu","着ありスパー":"jiujitsu",
+};
+
+const SCHEDULES = {
+  hearts_shinjuku:{
+    name:"和術慧舟會HEARTS", sub:"新宿",
+    gridStart: 14, gridEnd: 23, // 表示する時間帯(時)
+    days:{
+      月:[
+        {name:"フリートレーニング",start:"15:00",end:"22:30"},
+        {name:"高強度サーキット",start:"16:00",end:"16:45"},
+        {name:"アマチュア選手志望練習",start:"17:30",end:"18:30"},
+        {name:"キックテクニック",start:"19:00",end:"19:30"},
+        {name:"ライトスパー",start:"19:30",end:"20:00"},
+        {name:"柔術オールクラス",start:"20:30",end:"21:30"},
+        {name:"柔術スパー",start:"21:30",end:"22:15"},
+      ],
+      火:[
+        {name:"フリートレーニング",start:"15:00",end:"22:30"},
+        {name:"キックテクニック",start:"16:00",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"グラップリングスパー",start:"19:00",end:"20:00"},
+        {name:"キックテクニック",start:"20:30",end:"21:30"},
+        {name:"ライトスパー",start:"21:30",end:"22:15"},
+      ],
+      水:[
+        {name:"フリートレーニング",start:"15:00",end:"22:30"},
+        {name:"キックテクニック",start:"16:00",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"グラップリングテクニック",start:"19:00",end:"19:45"},
+        {name:"グラップリングスパー",start:"19:45",end:"20:30"},
+        {name:"MMAテクニック",start:"21:00",end:"22:15"},
+      ],
+      木:[
+        {name:"フリートレーニング",start:"15:00",end:"22:30"},
+        {name:"MMA初級",start:"16:00",end:"17:00"},
+        {name:"アマチュア選手志望練習",start:"17:30",end:"19:00"},
+        {name:"柔術テクニック",start:"19:00",end:"20:00"},
+        {name:"ボクシングテクニック",start:"20:30",end:"21:15"},
+        {name:"ライトスパー",start:"21:15",end:"22:15"},
+      ],
+      金:[
+        {name:"フリートレーニング",start:"15:00",end:"22:30"},
+        {name:"キックテクニック",start:"16:00",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"アマチュア選手志望練習",start:"17:30",end:"19:00"},
+        {name:"キック上級",start:"19:00",end:"20:00"},
+        {name:"グラップリング中級",start:"20:30",end:"21:30"},
+        {name:"グラップリングスパー",start:"21:30",end:"22:15"},
+      ],
+      土:[
+        {name:"フリートレーニング",start:"14:00",end:"19:00"},
+        {name:"MMAレスリング",start:"14:00",end:"15:30"},
+        {name:"キックテクニック",start:"16:00",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"MMAテクニック",start:"17:30",end:"19:00"},
+      ],
+      日:[
+        {name:"フリートレーニング",start:"14:00",end:"19:00"},
+        {name:"MMAレスリング",start:"14:00",end:"15:30"},
+        {name:"キックテクニック",start:"16:00",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"MMAテクニック",start:"17:30",end:"19:00"},
+      ],
+    }
+  },
+  kix_shinjuku:{
+    name:"HEARTS KIX", sub:"新宿",
+    gridStart: 8, gridEnd: 23,
+    days:{
+      月:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"キック初級",start:"16:00",end:"16:30"},
+        {name:"サンドバックミット",start:"16:30",end:"17:00"},
+        {name:"キック初級",start:"19:00",end:"19:45"},
+        {name:"サンドバックミット",start:"19:45",end:"20:30"},
+        {name:"キックボクシングフォーム指導フリーミット",start:"21:00",end:"22:00"},
+      ],
+      火:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"グラップリング初級",start:"16:00",end:"17:00"},
+        {name:"キック初級",start:"19:00",end:"19:30"},
+        {name:"サーキット",start:"19:30",end:"20:00"},
+        {name:"サンドバックミット",start:"20:00",end:"20:30"},
+        {name:"グラップリング超初級",start:"21:00",end:"22:00"},
+      ],
+      水:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"グラップリング初級",start:"16:00",end:"17:00"},
+        {name:"サーキット",start:"19:00",end:"19:30"},
+        {name:"キック初級",start:"19:30",end:"20:00"},
+        {name:"ライトスパー",start:"20:00",end:"20:30"},
+        {name:"グラップリング初級",start:"21:00",end:"22:00"},
+      ],
+      木:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"キック初級",start:"16:00",end:"16:30"},
+        {name:"サンドバックミット",start:"16:30",end:"17:00"},
+        {name:"サーキット",start:"19:00",end:"19:45"},
+        {name:"サンドバックミット",start:"19:45",end:"20:30"},
+        {name:"グラップリング",start:"21:00",end:"22:00"},
+      ],
+      金:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"グラップリング初級",start:"16:00",end:"17:00"},
+        {name:"キック初級",start:"19:00",end:"19:30"},
+        {name:"サーキット",start:"19:30",end:"20:30"},
+        {name:"キック超初級",start:"21:00",end:"22:00"},
+      ],
+      土:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"柔術オールクラス",start:"9:30",end:"10:45"},
+        {name:"フィットネス",start:"11:00",end:"11:45"},
+        {name:"サンドバックミット",start:"11:45",end:"12:30"},
+        {name:"キック初級",start:"13:00",end:"13:30"},
+        {name:"ライトスパー",start:"13:30",end:"14:00"},
+      ],
+      日:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"柔術オールクラス",start:"9:30",end:"10:45"},
+        {name:"フィットネス",start:"11:00",end:"11:45"},
+        {name:"サンドバックミット",start:"11:45",end:"12:30"},
+        {name:"キック初級",start:"13:00",end:"13:30"},
+        {name:"ライトスパー",start:"13:30",end:"14:00"},
+      ],
+    }
+  },
+  kix_komazawa:{
+    name:"HEARTS KIX", sub:"駒沢",
+    gridStart: 8, gridEnd: 23,
+    days:{
+      月:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"サンドバックミット",start:"15:45",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"キック超初級",start:"19:30",end:"20:00"},
+        {name:"ライトスパー",start:"20:00",end:"20:30"},
+        {name:"グラップリング",start:"20:40",end:"22:00"},
+      ],
+      火:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"キッズ",start:"16:30",end:"17:30"},
+        {name:"サンドバックミット",start:"19:30",end:"20:00"},
+        {name:"MMA初級",start:"20:40",end:"21:15"},
+      ],
+      水:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"サンドバックミット",start:"15:45",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"フィットネス",start:"19:00",end:"19:30"},
+        {name:"サンドバックミット",start:"19:30",end:"20:00"},
+        {name:"キック初級",start:"20:40",end:"21:15"},
+        {name:"ライトスパー",start:"21:15",end:"22:00"},
+      ],
+      木:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"キッズ",start:"16:30",end:"17:30"},
+        {name:"サンドバックミット",start:"19:30",end:"20:00"},
+        {name:"キック初級",start:"20:40",end:"21:15"},
+        {name:"ライトスパー",start:"21:15",end:"22:00"},
+      ],
+      金:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"サンドバックミット",start:"15:45",end:"16:30"},
+        {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"キック超初級",start:"19:30",end:"20:00"},
+        {name:"ライトスパー",start:"20:00",end:"20:30"},
+        {name:"MMA初級",start:"20:40",end:"22:00"},
+      ],
+      土:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"柔術オールクラス",start:"9:30",end:"10:45"},
+        {name:"フィットネス",start:"11:00",end:"11:45"},
+        {name:"サンドバックミット",start:"11:45",end:"12:30"},
+        {name:"キック初級",start:"13:00",end:"13:30"},
+        {name:"ライトスパー",start:"13:30",end:"14:00"},
+      ],
+      日:[
+        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"柔術オールクラス",start:"9:30",end:"10:45"},
+        {name:"フィットネス",start:"11:00",end:"11:45"},
+        {name:"サンドバックミット",start:"11:45",end:"12:30"},
+        {name:"キック初級",start:"13:00",end:"13:30"},
+        {name:"ライトスパー",start:"13:30",end:"14:00"},
+      ],
+    }
+  },
+  gonz:{
+    name:"ゴンズジム", sub:"神戸（過去）",
+    gridStart: 19, gridEnd: 22,
+    days:{
+      月:[
+        {name:"寝技打込み",start:"19:30",end:"21:00"},
+        {name:"寝技スパー",start:"21:00",end:"21:30"},
+      ],
+      火:[
+        {name:"キック打込み",start:"19:30",end:"21:00"},
+        {name:"キックスパー",start:"21:00",end:"21:30"},
+      ],
+      水:[
+        {name:"組み打込み",start:"19:30",end:"21:00"},
+        {name:"組みスパー",start:"21:00",end:"21:30"},
+      ],
+      木:[
+        {name:"ミット&寝技打込み",start:"19:30",end:"21:00"},
+        {name:"寝技スパー",start:"21:00",end:"21:30"},
+      ],
+      金:[
+        {name:"MMA打込み",start:"19:30",end:"21:00"},
+        {name:"MMAスパー",start:"21:00",end:"21:30"},
+      ],
+      土:[
+        {name:"着あり寝技打込み",start:"19:30",end:"21:00"},
+        {name:"着ありスパー",start:"21:00",end:"21:30"},
+      ],
+      日:[],
+    }
+  },
+};
+
+/* ============================================================
+   STATE (localStorage)
+   ============================================================ */
+const STORAGE_KEY = "keishukai_training_log_v1";
+
+const DEFAULT_BACKGROUND = `【ゴンズジム時代（神戸）】
+1年以上、週1回ペース（曜日は不規則）で通っていた。1回あたり19:30〜21:30の2時間で、その日の曜日に応じたメニューのローテーションに参加していた。
+・月曜：寝技打込み＆寝技スパー
+・火曜：キック打込み＆キックスパー
+・水曜：組み（ノーギ）打込み＆組みスパー
+・木曜：ミット＆寝技打込み＆寝技スパー
+・金曜：MMA打込み＆MMAスパー
+・土曜：着あり（柔術）寝技打込み＆着ありスパー
+打込み(技術練習)が19:30〜21:00頃、スパーリングが21:00〜21:30。週1ペースのため、全曜日のメニューを毎週やっていたわけではなく、その週に通えた曜日のメニューのみ実施していた。`;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(!parsed.pastNotes) parsed.pastNotes = {};
+      if(parsed.pastSummaryLoading===undefined) parsed.pastSummaryLoading = false;
+      if(parsed.focusSuggestion===undefined) parsed.focusSuggestion = null;
+      if(parsed.goalAdvice===undefined) parsed.goalAdvice = "";
+      parsed.focusLoading = false;
+      parsed.focusError = null;
+      if(!parsed.background || !parsed.background.trim()) parsed.background = DEFAULT_BACKGROUND;
+      // マイグレーション: 旧形式のnotesキー(dojo|day|className|start)を削除
+      if(parsed.notes){
+        Object.keys(parsed.notes).forEach(key=>{
+          if(key.split("|").length > 2){
+            delete parsed.notes[key];
+          }
+        });
+      }
+      return parsed;
+    }
+  }catch(e){}
+  return {
+    dojo:"hearts_shinjuku",
+    notes:{},
+    pastNotes:{}, // key: "YYYY-MM-DD" -> メモ文字列（ゴンズジム時代などの過去実績）
+    background: DEFAULT_BACKGROUND,
+    goalText: "",
+    goalBalance: null, // {striking,jiujitsu,grappling,mma} 推奨週間時間(h) - Geminiが計算
+    goalAdvice: "", // 行動面・ペース面のアドバイス - Geminiが計算
+    goalBalanceLoading: false,
+    pastSummaryLoading: false,
+    apiKey:"",
+    focusSuggestion: null, // {date:"YYYY-MM-DD", text:"..."}
+    focusLoading: false,
+    focusError: null,
+  };
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+let activeTab = "calendar";
+let pastCalMonth = new Date(); // 過去実績タブの表示月
+let historyCalMonth = new Date(); // ノートタブの表示月
+let skillPeriod = "total"; // "month" / "year" / "total"
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function durationHours(start,end){
+  const [h1,m1]=start.split(":").map(Number);
+  const [h2,m2]=end.split(":").map(Number);
+  return ((h2*60+m2)-(h1*60+m1))/60;
+}
+function noteKey(dojo, dateStr){
+  return `${dojo}|${dateStr}`;
+}
+// 今週(月曜始まり)の日付一覧を取得
+function getWeekDates(baseDate){
+  const d = new Date(baseDate);
+  const dow = d.getDay(); // 0=Sun
+  const mondayOffset = dow===0 ? -6 : 1-dow;
+  const monday = new Date(d);
+  monday.setDate(d.getDate()+mondayOffset);
+  const dates = [];
+  for(let i=0;i<7;i++){
+    const dd = new Date(monday);
+    dd.setDate(monday.getDate()+i);
+    dates.push(dd);
+  }
+  return dates;
+}
+function getSkill(className, prevClassName){
+  if(className==="ライトスパー" && prevClassName){
+    return SKILL_MAP[prevClassName] || "mma";
+  }
+  return SKILL_MAP[className] || "mma";
+}
+// classes配列（{name,...}の並び）に対し、各要素のスキルを「直前のクラス」を考慮して算出
+function getSkillsForClasses(classes){
+  let prevName = null;
+  return classes.map(c=>{
+    const sk = getSkill(c.name, prevName);
+    if(c.name!=="ライトスパー") prevName = c.name;
+    return sk;
+  });
+}
+// dojo: 文字列なら該当道場のみ、nullなら全道場合算
+// period: "month" (今月) / "year" (今年) / "total" (累計)
+function calcSkillTotals(dojo, period){
+  const totals = {striking:0,jiujitsu:0,grappling:0,mma:0};
+  const now = new Date();
+  const yearPrefix = String(now.getFullYear());
+  const monthPrefix = `${yearPrefix}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  Object.entries(state.notes).forEach(([key,note])=>{
+    if(dojo && !key.startsWith(dojo+"|")) return;
+    if(!note.classes || !note.classes.length) return;
+    const dateStr = key.split("|")[1] || "";
+    if(period==="month" && !dateStr.startsWith(monthPrefix)) return;
+    if(period==="year" && !dateStr.startsWith(yearPrefix)) return;
+    const skills = getSkillsForClasses(note.classes);
+    note.classes.forEach((c,i)=>{
+      const dur = durationHours(c.start,c.end);
+      totals[skills[i]] += dur;
+    });
+  });
+
+  return totals;
+}
+
+// 期間ごとの「週数」を概算する（goalBalance(週間値)から各期間の目標値を出すため）
+function getWeeksForPeriod(period){
+  const now = new Date();
+  if(period==="month"){
+    // 今月の経過日数 / 7（最低1週）
+    const elapsedDays = now.getDate();
+    return Math.max(elapsedDays/7, 1/7);
+  }
+  if(period==="year"){
+    // 今年の経過日数 / 7（最低1週）
+    const start = new Date(now.getFullYear(),0,1);
+    const elapsedDays = Math.floor((now - start)/(1000*60*60*24)) + 1;
+    return Math.max(elapsedDays/7, 1/7);
+  }
+  // total: 全記録の最初の日付〜今日の週数（記録がなければ1週）
+  let earliest = null;
+  Object.keys(state.notes).forEach(key=>{
+    if(!key.includes("|")) return;
+    const dateStr = key.split("|")[1];
+    if(!dateStr) return;
+    const d = new Date(dateStr);
+    if(!earliest || d < earliest) earliest = d;
+  });
+  if(!earliest) return 1;
+  const elapsedDays = Math.floor((now - earliest)/(1000*60*60*24)) + 1;
+  return Math.max(elapsedDays/7, 1);
+}
+
+// 週間目標バランスを、指定期間（今月/今年/累計）の目標値に変換
+function getGoalForPeriod(period){
+  if(!state.goalBalance) return null;
+  const weeks = getWeeksForPeriod(period);
+  const result = {};
+  SKILL_KEYS.forEach(k=>{
+    result[k] = state.goalBalance[k] * weeks;
+  });
+  return result;
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s){
+  return escapeHtml(s).replace(/\n/g,'');
+}
+
+/* ============================================================
+   RENDER: DOJO SELECTOR
+   ============================================================ */
+function renderDojoSelect(){
+  const el = document.getElementById('dojoSelect');
+  el.innerHTML = Object.entries(SCHEDULES).filter(([key])=>key!=="gonz").map(([key,d])=>`
+    <button class="dojo-btn ${state.dojo===key?'active':''}" data-dojo="${key}">
+      ${d.name}<div class="dojo-sub">${d.sub}</div>
+    </button>
+  `).join('');
+  el.querySelectorAll('.dojo-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      state.dojo = btn.dataset.dojo;
+      saveState();
+      renderAll();
+    });
+  });
+  document.getElementById('dojoTitle').textContent = SCHEDULES[state.dojo].name + "（" + SCHEDULES[state.dojo].sub + "）";
+}
+
+/* ============================================================
+   RENDER: TABS
+   ============================================================ */
+function renderTabs(){
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.tab===activeTab);
+    t.onclick = ()=>{ activeTab=t.dataset.tab; renderAll(); };
+  });
+}
+
+/* ============================================================
+   RENDER: TODAY'S FOCUS TAB
+   ============================================================ */
+function renderFocusTab(){
+  const todayKey = `${ymd(new Date())}|${state.dojo}`;
+  const cached = state.focusSuggestion;
+  const hasToday = cached && cached.key===todayKey && cached.text;
+
+  let html = `
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">今日の意識（${SCHEDULES[state.dojo].name}${SCHEDULES[state.dojo].sub?` ${SCHEDULES[state.dojo].sub}`:''}）</div>
+        <button class="btn btn-secondary" id="regenFocus" style="font-size:10px;padding:6px 10px;">再生成</button>
+      </div>
+  `;
+
+  if(!state.apiKey){
+    html += `<div class="empty">Gemini APIキーが未設定です。目標設定タブから設定してください。</div>`;
+  } else if(state.focusLoading){
+    html += `<div class="fb-box loading">Geminiが過去の記録から提案を作成中...</div>`;
+  } else if(state.focusError){
+    html += `<div class="fb-box"><div class="fb-error">提案取得エラー: ${escapeHtml(state.focusError)}</div></div>`;
+  } else if(hasToday){
+    html += renderFocusContent(cached.text);
+  } else {
+    html += `<div class="empty">読み込み中...</div>`;
+  }
+
+  html += `</div>`;
+  html += `<div class="empty">※ 今日の道場（${SCHEDULES[state.dojo].name}）の本日のクラス内容と、全道場・ゴンズジムの記録、前提情報、目標を踏まえて、Geminiが今日意識すべきことを1つ提案します。1日1回・道場ごとに自動生成され、再生成ボタンや道場切り替えでいつでも更新できます。</div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('regenFocus').onclick = ()=> generateTodayFocus(true);
+
+  if(state.apiKey && !hasToday && !state.focusLoading){
+    generateTodayFocus(false);
+  }
+}
+
+function renderFocusContent(text){
+  // 【今日の意識】 と 【理由】 のセクションをパースして見やすく表示
+  const focusMatch = text.match(/【今日の意識】\s*([\s\S]*?)(?=【理由】|$)/);
+  const reasonMatch = text.match(/【理由】\s*([\s\S]*)/);
+  const focus = focusMatch ? focusMatch[1].trim() : text.trim();
+  const reason = reasonMatch ? reasonMatch[1].trim() : "";
+
+  return `
+    <div class="focus-highlight">
+      <div class="focus-label">今日意識すること</div>
+      <div class="focus-main">${escapeHtml(focus)}</div>
+    </div>
+    ${reason ? `<div class="focus-reason"><div class="focus-reason-label">理由</div><div class="focus-reason-text">${escapeHtml(reason)}</div></div>` : ''}
+  `;
+}
+
+async function generateTodayFocus(force){
+  const todayKey = `${ymd(new Date())}|${state.dojo}`;
+  if(!force && state.focusSuggestion && state.focusSuggestion.key===todayKey) return;
+
+  state.focusLoading = true;
+  state.focusError = null;
+  renderFocusTab();
+  try{
+    const text = await getTodayFocus();
+    state.focusSuggestion = {key: todayKey, text};
+    saveState();
+  }catch(err){
+    state.focusError = err.message;
+  }
+  state.focusLoading = false;
+  renderFocusTab();
+}
+
+
+
+/* ============================================================
+   RENDER: CALENDAR TAB (grid view, time x day)
+   ============================================================ */
+const HOUR_HEIGHT = 60; // px per hour
+
+function timeToMinutes(t){
+  const [h,m]=t.split(":").map(Number);
+  return h*60+m;
+}
+
+function renderCalendar(){
+  const sched = SCHEDULES[state.dojo];
+  const dayOrder = ["月","火","水","木","金","土","日"];
+  const gridStart = sched.gridStart!==undefined ? sched.gridStart : 8;
+  const gridEnd = sched.gridEnd!==undefined ? sched.gridEnd : 23;
+  const totalHours = gridEnd - gridStart;
+  const gridHeight = totalHours * HOUR_HEIGHT;
+
+  // hour labels (left column)
+  let hourLabels = '';
+  for(let h=gridStart; h<=gridEnd; h++){
+    hourLabels += `<div class="grid-hour-label" style="top:${(h-gridStart)*HOUR_HEIGHT}px">${h}</div>`;
+  }
+
+  // day columns
+  let dayColsHtml = '';
+  dayOrder.forEach(day=>{
+    const classes = sched.days[day] || [];
+    let cellsHtml = '';
+
+    // hour gridlines
+    for(let h=gridStart; h<gridEnd; h++){
+      cellsHtml += `<div class="grid-line" style="top:${(h-gridStart)*HOUR_HEIGHT}px"></div>`;
+    }
+
+    // sort so that "フリートレーニング" (background-like, long duration) renders first/behind
+    const sorted = [...classes].sort((a,b)=>{
+      const aFree = a.name==="フリートレーニング" ? 0 : 1;
+      const bFree = b.name==="フリートレーニング" ? 0 : 1;
+      if(aFree!==bFree) return aFree-bFree;
+      return timeToMinutes(a.start)-timeToMinutes(b.start);
+    });
+
+    // detect overlaps among non-free classes, assign column index/count
+    const nonFree = sorted.filter(c=>c.name!=="フリートレーニング");
+    const layout = new Map(); // cls -> {col, cols}
+    nonFree.forEach((cls,i)=>{
+      const aStart = timeToMinutes(cls.start), aEnd = timeToMinutes(cls.end);
+      // find all classes overlapping with this one
+      const overlapping = nonFree.filter(other=>{
+        const bStart = timeToMinutes(other.start), bEnd = timeToMinutes(other.end);
+        return aStart < bEnd && bStart < aEnd;
+      });
+      const cols = overlapping.length;
+      const col = overlapping.indexOf(cls);
+      layout.set(cls, {col, cols});
+    });
+
+    sorted.forEach(cls=>{
+      const color = getClassColor(cls.name);
+      const isFree = cls.name==="フリートレーニング";
+      const textColor = isFree ? 'var(--sub)' : getTextColorFor(color);
+
+      const startMin = timeToMinutes(cls.start) - gridStart*60;
+      const endMin = timeToMinutes(cls.end) - gridStart*60;
+      const top = Math.max(0,(startMin/60)*HOUR_HEIGHT);
+      const height = Math.max(18,((endMin-startMin)/60)*HOUR_HEIGHT);
+
+      let leftStyle = 'left:1px;right:1px;';
+      if(!isFree){
+        const lo = layout.get(cls);
+        if(lo && lo.cols>1){
+          const widthPct = 100/lo.cols;
+          leftStyle = `left:calc(${widthPct*lo.col}% + 1px);width:calc(${widthPct}% - 2px);right:auto;`;
+        }
+      }
+
+      cellsHtml += `
+        <div class="grid-class ${isFree?'is-free':''}"
+             style="top:${top}px;height:${height}px;${leftStyle}background:${isFree?color+'18':color};border-color:${color};color:${textColor};">
+          <div class="grid-class-name">${cls.name}</div>
+          <div class="grid-class-time">${cls.start}-${cls.end}</div>
+        </div>
+      `;
+    });
+
+    dayColsHtml += `
+      <div class="grid-day-col">
+        <div class="grid-day-header">${day}</div>
+        <div class="grid-day-body" style="height:${gridHeight}px">${cellsHtml}</div>
+      </div>
+    `;
+  });
+
+  const html = `
+    <div class="card">
+      <div class="card-title">週間スケジュール</div>
+      <div class="cal-legend">
+        ${SKILL_KEYS.map(k=>`<div class="legend-item"><div class="legend-dot" style="background:${SKILL_META[k].hex}"></div>${SKILL_META[k].label}</div>`).join('')}
+      </div>
+      <div class="grid-wrap">
+        <div class="grid-hours">
+          <div class="grid-day-header"></div>
+          <div class="grid-hours-body" style="height:${gridHeight}px">${hourLabels}</div>
+        </div>
+        <div class="grid-days">${dayColsHtml}</div>
+      </div>
+      <div class="empty">※ 練習の記録は「ノート」タブから日付を選んで行えます。</div>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+}
+
+/* ============================================================
+   MODAL: NOTE EDITOR + GEMINI FB
+   ============================================================ */
+function openNoteModal(dateStr, dojo){
+  dojo = dojo || state.dojo;
+  const key = noteKey(dojo,dateStr);
+  const note = state.notes[key] || {text:"", fb:"", classes:[]};
+  const sched = SCHEDULES[dojo];
+
+  // その日の曜日に対応するスケジュールから候補クラスを取得（フリートレーニングは除く）
+  const dow = new Date(dateStr).getDay(); // 0=Sun..6=Sat
+  const dayKeyMap = ["日","月","火","水","木","金","土"];
+  const dayKey = dayKeyMap[dow];
+  const candidates = (sched.days[dayKey]||[]).filter(c=>c.name!=="フリートレーニング");
+
+  const selectedSet = new Set((note.classes||[]).map(c=>`${c.name}|${c.start}`));
+
+  const d = new Date(dateStr);
+  const dateLabel = `${d.getMonth()+1}月${d.getDate()}日（${DOW_LABELS[d.getDay()]}）`;
+
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-class">${dateLabel}</div>
+          <div class="modal-time">${sched.name}（${sched.sub}）</div>
+        </div>
+        <div class="card-title" style="margin-top:14px;">行ったクラス（複数選択可）</div>
+        <div class="class-picker">
+          ${candidates.length===0?'<div class="empty">この曜日のクラスはありません。</div>':''}
+          ${candidates.map(c=>{
+            const id = `${c.name}|${c.start}`;
+            const color = getClassColor(c.name);
+            const checked = selectedSet.has(id) ? 'checked' : '';
+            return `
+              <label class="class-pick-item" style="border-color:${color}66">
+                <input type="checkbox" data-id="${escapeAttr(id)}" data-name="${escapeAttr(c.name)}" data-start="${c.start}" data-end="${c.end}" ${checked}>
+                <span class="class-pick-dot" style="background:${color}"></span>
+                <span class="class-pick-name">${c.name}</span>
+                <span class="class-pick-time">${c.start}-${c.end}</span>
+              </label>
+            `;
+          }).join('')}
+        </div>
+        <div class="card-title" style="margin-top:14px;">メモ</div>
+        <textarea id="noteText" placeholder="今日の練習内容、気づき、課題など...">${escapeHtml(note.text||"")}</textarea>
+        <div class="modal-actions">
+          <button class="btn btn-secondary btn-full" id="closeModal">閉じる</button>
+          <button class="btn btn-primary btn-full" id="saveNote">保存して分析</button>
+        </div>
+        <div id="fbArea">${note.fb ? renderFbBox(note.fb) : ''}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('closeModal').onclick = closeModal;
+  document.getElementById('modalOverlay').addEventListener('click', e=>{
+    if(e.target.id==='modalOverlay') closeModal();
+  });
+  document.getElementById('saveNote').onclick = async ()=>{
+    const text = document.getElementById('noteText').value;
+    const checkedBoxes = [...document.querySelectorAll('.class-picker input[type=checkbox]:checked')];
+    const classes = checkedBoxes.map(cb=>({name:cb.dataset.name, start:cb.dataset.start, end:cb.dataset.end}));
+
+    if(classes.length===0 && !text.trim()){
+      // 何も入力されていなければ削除
+      delete state.notes[key];
+      saveState();
+      closeModal();
+      renderAll();
+      return;
+    }
+
+    state.notes[key] = { text, fb: note.fb||"", classes, date: new Date().toISOString() };
+    saveState();
+
+    if(!text.trim()){
+      closeModal();
+      renderAll();
+      return;
+    }
+
+    if(state.apiKey){
+      document.getElementById('fbArea').innerHTML = renderFbBox(null, true);
+      try{
+        const fb = await getGeminiFeedback(classes, text);
+        state.notes[key].fb = fb;
+        saveState();
+        document.getElementById('fbArea').innerHTML = renderFbBox(fb);
+      }catch(err){
+        document.getElementById('fbArea').innerHTML = `<div class="fb-box"><div class="fb-error">FB取得エラー: ${escapeHtml(err.message)}</div></div>`;
+      }
+    } else {
+      document.getElementById('fbArea').innerHTML = `<div class="fb-box"><div class="fb-error">Gemini APIキーが未設定です。目標設定タブから設定できます。</div></div>`;
+    }
+    renderAll();
+  };
+}
+function renderFbBox(fb, loading){
+  if(loading){
+    return `<div class="fb-box loading">Geminiが分析中...</div>`;
+  }
+  if(!fb) return '';
+  return `
+    <div class="fb-box">
+      <div class="fb-label">🥋 Gemini からのフィードバック</div>
+      <div class="fb-text">${escapeHtml(fb)}</div>
+    </div>
+  `;
+}
+function closeModal(){
+  document.getElementById('modalRoot').innerHTML = '';
+}
+
+/* ============================================================
+   GEMINI API CALL
+   ============================================================ */
+async function callGemini(prompt){
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${state.apiKey}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      contents:[{ parts:[{text:prompt}] }]
+    })
+  });
+  if(!res.ok){
+    const errData = await res.json().catch(()=>({}));
+    throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error("応答が空でした");
+  return text.trim();
+}
+
+async function getGeminiFeedback(classes, noteText){
+  const goalText = state.goalText?.trim();
+  const goalLine = goalText ? `目標: ${goalText}` : "（目標は未設定）";
+  const bgText = state.background?.trim();
+  const bgLine = bgText ? `\n選手の背景・経歴:\n${bgText}\n` : "";
+
+  let classLine = "（記録されたクラスはありません）";
+  if(classes && classes.length>0){
+    const skills = getSkillsForClasses(classes);
+    classLine = classes.map((c,i)=>`${c.name}（${c.start}-${c.end}, カテゴリ: ${SKILL_META[skills[i]].label}）`).join("、");
+  }
+
+  const prompt = `あなたは格闘技ジムのコーチです。以下の練習ノートに対して、短く（3〜4文程度）、具体的で実践的なフィードバックを日本語で書いてください。
+励ましつつ、次回の練習で意識すべき点を1つ提案してください。目標が設定されている場合は、その目標に向けて今の練習がどう役立つかも触れてください。選手の経歴・経験レベルを踏まえた、レベルに合ったアドバイスにしてください。
+${bgLine}
+この日に行ったクラス: ${classLine}
+${goalLine}
+
+練習ノート:
+${noteText}`;
+
+  return await callGemini(prompt);
+}
+
+// 今日意識すべきことを1つ提案させる（過去の全記録の傾向から）
+async function getTodayFocus(){
+  const goalText = state.goalText?.trim();
+  const goalLine = goalText ? `目標: ${goalText}` : "（目標は未設定）";
+  const bgText = state.background?.trim();
+  const bgLine = bgText ? `\n選手の背景・経歴:\n${bgText}\n` : "";
+
+  // 今日選択中の道場と、その曜日のメニュー（フリートレーニング除く）
+  const dojo = state.dojo;
+  const sched = SCHEDULES[dojo];
+  const dayKeyMap = ["日","月","火","水","木","金","土"];
+  const todayDayKey = dayKeyMap[new Date().getDay()];
+  const todayClasses = (sched.days[todayDayKey]||[]).filter(c=>c.name!=="フリートレーニング");
+  const dojoName = `${sched.name}${sched.sub?`（${sched.sub}）`:''}`;
+  let todayMenuLine;
+  if(todayClasses.length>0){
+    const menuList = todayClasses.map(c=>{
+      const sk = getSkill(c.name);
+      return `${c.name}（${c.start}-${c.end}, カテゴリ: ${SKILL_META[sk].label}）`;
+    }).join('、');
+    todayMenuLine = `今日（${todayDayKey}曜日）に通う予定の道場: ${dojoName}\nそのクラス: ${menuList}`;
+  } else {
+    todayMenuLine = `今日（${todayDayKey}曜日）に通う予定の道場: ${dojoName}\nこの曜日に通常クラスはありません（フリートレーニングのみ）。`;
+  }
+
+  // 全道場+ゴンズの記録を日付順に集め、直近のものを優先的に使う
+  const entries = Object.entries(state.notes)
+    .map(([key,n])=>{
+      const parts = key.split("|");
+      return {dojo:parts[0], date:parts[1], note:n};
+    })
+    .filter(({note})=> (note.classes&&note.classes.length) || (note.text&&note.text.trim()))
+    .sort((a,b)=> b.date.localeCompare(a.date)); // 新しい順
+
+  const recent = entries.slice(0, 15);
+  let logText = "（記録がまだありません）";
+  if(recent.length>0){
+    logText = recent.map(({dojo,date,note})=>{
+      const dojoName = SCHEDULES[dojo] ? `${SCHEDULES[dojo].name}${SCHEDULES[dojo].sub?`（${SCHEDULES[dojo].sub}）`:''}` : dojo;
+      const classNames = (note.classes||[]).map(c=>c.name).join('、');
+      const text = note.text||"";
+      return `${date}（${dojoName}）${classNames?` [${classNames}]`:''}${text?`\n${text}`:''}`;
+    }).join('\n---\n');
+  }
+
+  const prompt = `あなたは格闘技ジムのコーチです。以下の選手の「今日通う予定の道場とそのクラス内容」「過去の練習記録（直近のもの優先）」「背景」「目標」を読んで、この選手が「今日の練習で意識すべきこと」を1つだけ選び、日本語で提案してください。
+今日のクラス内容に直接関係する、実践的な提案にしてください（クラスにないカテゴリの話は避ける）。
+
+出力は以下の形式の見出し+本文のみで、それ以外の説明や前置きは一切不要です:
+【今日の意識】
+（10〜20字程度の短いキーワード・フレーズ）
+
+【理由】
+（2〜3文程度。なぜこれを選んだか、今日のクラス内容・最近の記録のどこから読み取ったかを具体的に）
+
+${todayMenuLine}
+${bgLine}
+${goalLine}
+
+過去の練習記録（新しい順）:
+${logText}`;
+
+  return await callGemini(prompt);
+}
+
+// 目標テキストから打撃/柔術/組み/MMAの推奨週間練習時間(h)をJSONで取得
+async function calcGoalBalance(goalText){
+  const bgText = state.background?.trim();
+  const bgLine = bgText ? `\n選手の背景・経歴:\n${bgText}\n` : "";
+
+  const prompt = `あなたは格闘技ジムのコーチです。以下の選手の背景と目標を読んで、2つのことを提案してください。
+
+選手の現在の経験レベル・通えるペース（背景情報を参照）を踏まえて、現実的に達成可能な内容にしてください。
+${bgLine}
+カテゴリの定義:
+- 打撃: キックボクシング、ボクシングなどの打撃技術・スパー
+- 柔術: 柔術の技術・スパー
+- 組み: レスリングやノーギグラップリングなどの組み技・スパー
+- MMA: MMA総合練習、アマチュア選手向け練習
+
+選手の目標:
+${goalText}
+
+1つ目: 目標達成のために理想的な「週間の練習時間バランス」を、打撃・柔術・組み・MMAの4カテゴリで提案（数値は週あたりの時間数、0〜15の範囲、小数可）。
+
+2つ目: 「週間の練習時間バランス」だけでは目標達成に不十分な場合があります（例: 週1回ペースを1年続けても大会出場という行動目標には届かなかった、というケースもあります）。練習時間の配分に加えて、目標を達成するために必要な「行動面・ペース面のアドバイス」を3〜4文程度で日本語で書いてください。通う頻度、大会エントリーや申し込みのタイミング、スパー経験量の確保など、技術練習の配分だけでは見落としがちな点に触れてください。
+
+出力は説明文なしで、以下のJSON形式のみを返してください:
+{"balance":{"striking":数値,"jiujitsu":数値,"grappling":数値,"mma":数値},"advice":"行動面・ペース面のアドバイス文"}`;
+
+  const raw = await callGemini(prompt);
+  // strip code fences if any
+  const cleaned = raw.replace(/```json|```/g,'').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if(!match) throw new Error("バランス計算の応答を解析できませんでした");
+  const parsed = JSON.parse(match[0]);
+  const balanceRaw = parsed.balance || parsed; // フォールバック: 旧形式の応答にも対応
+  const result = {balance:{}, advice: parsed.advice || ""};
+  SKILL_KEYS.forEach(k=>{
+    const v = Number(balanceRaw[k]);
+    result.balance[k] = isNaN(v) ? 0 : Math.max(0, v);
+  });
+  return result;
+}
+
+/* ============================================================
+   RENDER: SKILL RADAR TAB
+   ============================================================ */
+function renderSkillTab(){
+  const totals = calcSkillTotals(null, skillPeriod);
+  const balance = getGoalForPeriod(skillPeriod); // null or {striking,jiujitsu,grappling,mma}（期間に応じた目標値）
+  const PERIOD_LABELS = {month:"今月", year:"今年", total:"累計"};
+
+  const size=300, cx=size/2, cy=size/2, r=104;
+  const angles = SKILL_KEYS.map((_,i)=> -Math.PI/2 + i*(Math.PI*2/4));
+
+  // 全軸で共通のスケールを使う（カテゴリ間の絶対量の差をそのまま反映するため）
+  const allValues = SKILL_KEYS.map(k=> totals[k]);
+  if(balance){ SKILL_KEYS.forEach(k=> allValues.push(balance[k]*1.2)); }
+  const maxAll = Math.max(...allValues, 1);
+  const maxScale = {};
+  SKILL_KEYS.forEach(k=> maxScale[k] = maxAll);
+
+  function pointFor(values, key, i){
+    const ratio = Math.min(1, values[key] / (maxScale[key]||1));
+    const rad = r*ratio;
+    return [cx + rad*Math.cos(angles[i]), cy + rad*Math.sin(angles[i])];
+  }
+  const actualPts = SKILL_KEYS.map((k,i)=>pointFor(totals,k,i));
+  const goalPts = balance ? SKILL_KEYS.map((k,i)=>pointFor(balance,k,i)) : null;
+  const gridPts = (frac)=> SKILL_KEYS.map((k,i)=>[cx+r*frac*Math.cos(angles[i]), cy+r*frac*Math.sin(angles[i])]);
+
+  function poly(pts){ return pts.map(p=>p.join(',')).join(' '); }
+
+  let gridSvg = '';
+  [0.25,0.5,0.75,1].forEach(f=>{
+    gridSvg += `<polygon points="${poly(gridPts(f))}" fill="none" stroke="#232a35" stroke-width="1"/>`;
+  });
+  let axisSvg = '';
+  SKILL_KEYS.forEach((k,i)=>{
+    const [x,y] = gridPts(1)[i];
+    axisSvg += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#232a35" stroke-width="1"/>`;
+    const lx = cx + (r+30)*Math.cos(angles[i]);
+    const ly = cy + (r+30)*Math.sin(angles[i]);
+    axisSvg += `<text x="${lx}" y="${ly}" fill="${SKILL_META[k].hex}" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="Zen Kaku Gothic New, sans-serif">${SKILL_META[k].label}</text>`;
+  });
+
+  const svg = `
+    <svg class="radar-svg" viewBox="0 0 ${size} ${size}">
+      ${gridSvg}
+      ${axisSvg}
+      ${goalPts ? `<polygon points="${poly(goalPts)}" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>` : ''}
+      <polygon points="${poly(actualPts)}" fill="#c8a06e" fill-opacity="0.28" stroke="#c8a06e" stroke-width="2"/>
+      ${actualPts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#c8a06e"/>`).join('')}
+    </svg>
+  `;
+
+  let html = `
+    <div class="card">
+      <div class="card-title-row">
+        <div class="card-title">スキルバランス（${PERIOD_LABELS[skillPeriod]}）</div>
+        <select id="skillPeriodSelect" class="period-select">
+          <option value="month" ${skillPeriod==="month"?'selected':''}>月別（今月）</option>
+          <option value="year" ${skillPeriod==="year"?'selected':''}>年別（今年）</option>
+          <option value="total" ${skillPeriod==="total"?'selected':''}>累計</option>
+        </select>
+      </div>
+      <div class="radar-wrap">
+        ${svg}
+        <div class="radar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#c8a06e"></div>記録した時間</div>
+          ${goalPts ? `<div class="legend-item"><div class="legend-dot" style="background:#fff;opacity:.5"></div>目標バランス（${PERIOD_LABELS[skillPeriod]}換算）</div>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">要素別 記録時間${balance ? ' / 目標バランス' : ''}</div>
+  `;
+
+  if(!balance){
+    html += `<div class="empty">目標設定タブで目標を入力すると、Geminiが推奨バランスを計算してここに目標ラインが表示されます。</div>`;
+  }
+
+  SKILL_KEYS.forEach(k=>{
+    const meta = SKILL_META[k];
+    const val = totals[k];
+    const goal = balance ? balance[k] : null;
+    const goalPct = goal!==null ? Math.min(100, (goal/maxScale[k])*100) : null;
+    const valPct = Math.min(100, (val/maxScale[k])*100);
+    html += `
+      <div class="skill-row">
+        <div class="skill-label" style="color:${meta.hex}">${meta.label}</div>
+        <div class="skill-bar-track">
+          <div class="skill-bar-fill" style="width:${valPct}%;background:${meta.hex}"></div>
+          ${goalPct!==null ? `<div class="skill-bar-goal" style="left:${goalPct}%"></div>` : ''}
+        </div>
+        <div class="skill-val">${val.toFixed(1)}h${goal!==null ? ` / ${goal.toFixed(1)}h` : ''}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  html += `<div class="empty">※ 全道場の記録をもとに自動集計しています。記録を削除するとグラフも更新されます。</div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('skillPeriodSelect').onchange = (e)=>{
+    skillPeriod = e.target.value;
+    renderSkillTab();
+  };
+}
+
+/* ============================================================
+   RENDER: HISTORY (NOTES) TAB
+   ============================================================ */
+function renderHistoryTab(){
+  const year = historyCalMonth.getFullYear();
+  const month = historyCalMonth.getMonth(); // 0-indexed
+  const monthLabel = `${year}年 ${month+1}月`;
+
+  const firstDay = new Date(year, month, 1);
+  // 月曜始まり: 0=月,...,6=日 に変換
+  const startWeekdaySun = firstDay.getDay(); // 0=Sun
+  const startWeekday = (startWeekdaySun+6)%7; // 0=Mon
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayStr = ymd(new Date());
+
+  // 年の選択肢: 今年を中心に過去6年〜来年まで
+  const curYear = new Date().getFullYear();
+  const yearOptions = [];
+  for(let y=curYear-6; y<=curYear+1; y++){ yearOptions.push(y); }
+
+  let html = `
+    <div class="card">
+      <div class="card-title">練習ノート（日付を選んでクラス＋メモを記録）</div>
+      <div class="month-nav">
+        <button id="prevHistMonth">‹</button>
+        <div class="month-nav-selects">
+          <select id="histYearSelect" class="period-select">
+            ${yearOptions.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}年</option>`).join('')}
+          </select>
+          <select id="histMonthSelect" class="period-select">
+            ${Array.from({length:12},(_,i)=>i).map(m=>`<option value="${m}" ${m===month?'selected':''}>${m+1}月</option>`).join('')}
+          </select>
+        </div>
+        <button id="nextHistMonth">›</button>
+      </div>
+      <div class="month-grid">
+        ${["月","火","水","木","金","土","日"].map(d=>`<div class="month-dow">${d}</div>`).join('')}
+  `;
+
+  for(let i=0;i<startWeekday;i++){
+    html += `<div class="month-cell empty"></div>`;
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = ymd(new Date(year,month,d));
+    const note = state.notes[noteKey(state.dojo,dateStr)];
+    const hasRecord = !!(note && ((note.classes&&note.classes.length) || (note.text&&note.text.trim())));
+    const isToday = dateStr===todayStr;
+    html += `
+      <div class="month-cell ${hasRecord?'has-record':''} ${isToday?'today':''}" data-date="${dateStr}">
+        ${d}
+        ${hasRecord?'<div class="mark"></div>':''}
+      </div>
+    `;
+  }
+
+  html += `</div></div>`;
+
+  // summary list for this month
+  const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
+  const monthEntries = Object.entries(state.notes)
+    .filter(([key,n])=> key.startsWith(state.dojo+"|"))
+    .map(([key,n])=>({date:key.split("|")[1], note:n}))
+    .filter(({date,note})=> date.startsWith(monthPrefix) && ((note.classes&&note.classes.length) || (note.text&&note.text.trim())))
+    .sort((a,b)=> a.date.localeCompare(b.date));
+
+  html += `<div class="card"><div class="card-title">${month+1}月の記録</div>`;
+  if(monthEntries.length===0){
+    html += `<div class="empty">この月の記録はまだありません。<br>日付をタップしてクラスとメモを記録できます。</div>`;
+  } else {
+    monthEntries.forEach(({date,note})=>{
+      const d = new Date(date);
+      const label = `${d.getMonth()+1}/${d.getDate()} (${DOW_LABELS[d.getDay()]})`;
+      const classNames = (note.classes||[]).map(c=>c.name).join('、');
+      html += `
+        <div class="note-item" data-date="${date}" style="cursor:pointer;">
+          <div class="note-item-head">
+            <div class="note-item-meta">${label}${classNames?` ・ ${classNames}`:''}</div>
+          </div>
+          ${note.text ? `<div class="note-item-text">${escapeHtml(note.text)}</div>` : ''}
+          ${note.fb ? `<div class="note-item-fb">🥋 ${escapeHtml(note.fb)}</div>` : ''}
+          <div class="note-item-actions">
+            <button data-key="${escapeAttr(noteKey(state.dojo,date))}" class="delete-note">削除</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('prevHistMonth').onclick = ()=>{
+    historyCalMonth = new Date(year, month-1, 1);
+    renderHistoryTab();
+  };
+  document.getElementById('nextHistMonth').onclick = ()=>{
+    historyCalMonth = new Date(year, month+1, 1);
+    renderHistoryTab();
+  };
+  document.getElementById('histYearSelect').onchange = (e)=>{
+    historyCalMonth = new Date(parseInt(e.target.value), month, 1);
+    renderHistoryTab();
+  };
+  document.getElementById('histMonthSelect').onchange = (e)=>{
+    historyCalMonth = new Date(year, parseInt(e.target.value), 1);
+    renderHistoryTab();
+  };
+  document.querySelectorAll('.month-cell[data-date]').forEach(el=>{
+    el.addEventListener('click',()=> openNoteModal(el.dataset.date));
+  });
+  document.querySelectorAll('.note-item[data-date]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      if(e.target.classList.contains('delete-note')) return;
+      openNoteModal(el.dataset.date);
+    });
+  });
+  document.querySelectorAll('.delete-note').forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      if(confirm('この記録を削除しますか？')){
+        delete state.notes[btn.dataset.key];
+        saveState();
+        renderAll();
+      }
+    };
+  });
+}
+
+/* ============================================================
+   RENDER: PAST RECORDS TAB (month calendar)
+   ============================================================ */
+function ymd(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function renderPastTab(){
+  const dojo = "gonz";
+  const year = pastCalMonth.getFullYear();
+  const month = pastCalMonth.getMonth(); // 0-indexed
+
+  const firstDay = new Date(year, month, 1);
+  // 月曜始まり: 0=月,...,6=日 に変換
+  const startWeekdaySun = firstDay.getDay(); // 0=Sun
+  const startWeekday = (startWeekdaySun+6)%7; // 0=Mon
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const todayStr = ymd(new Date());
+
+  // 年の選択肢: 今年を中心に過去6年〜来年まで
+  const curYear = new Date().getFullYear();
+  const yearOptions = [];
+  for(let y=curYear-6; y<=curYear+1; y++){ yearOptions.push(y); }
+
+  let html = `
+    <div class="card">
+      <div class="card-title">過去実績（ゴンズジム / 神戸） - 日付を選んでクラス＋メモを記録</div>
+      <div class="month-nav">
+        <button id="prevMonth">‹</button>
+        <div class="month-nav-selects">
+          <select id="pastYearSelect" class="period-select">
+            ${yearOptions.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}年</option>`).join('')}
+          </select>
+          <select id="pastMonthSelect" class="period-select">
+            ${Array.from({length:12},(_,i)=>i).map(m=>`<option value="${m}" ${m===month?'selected':''}>${m+1}月</option>`).join('')}
+          </select>
+        </div>
+        <button id="nextMonth">›</button>
+      </div>
+      <div class="month-grid">
+        ${["月","火","水","木","金","土","日"].map(d=>`<div class="month-dow">${d}</div>`).join('')}
+  `;
+
+  for(let i=0;i<startWeekday;i++){
+    html += `<div class="month-cell empty"></div>`;
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = ymd(new Date(year,month,d));
+    const note = state.notes[noteKey(dojo,dateStr)];
+    const hasRecord = !!(note && ((note.classes&&note.classes.length) || (note.text&&note.text.trim())));
+    const isToday = dateStr===todayStr;
+    html += `
+      <div class="month-cell ${hasRecord?'has-record':''} ${isToday?'today':''}" data-date="${dateStr}">
+        ${d}
+        ${hasRecord?'<div class="mark"></div>':''}
+      </div>
+    `;
+  }
+
+  html += `</div></div>`;
+
+  // summary list for this month
+  const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
+  const monthEntries = Object.entries(state.notes)
+    .filter(([key,n])=> key.startsWith(dojo+"|"))
+    .map(([key,n])=>({date:key.split("|")[1], note:n}))
+    .filter(({date,note})=> date.startsWith(monthPrefix) && ((note.classes&&note.classes.length) || (note.text&&note.text.trim())))
+    .sort((a,b)=> a.date.localeCompare(b.date));
+
+  html += `<div class="card"><div class="card-title">${month+1}月の記録</div>`;
+  if(monthEntries.length===0){
+    html += `<div class="empty">この月の記録はまだありません。<br>日付をタップしてクラスとメモを記録できます。</div>`;
+  } else {
+    monthEntries.forEach(({date,note})=>{
+      const d = new Date(date);
+      const label = `${d.getMonth()+1}/${d.getDate()} (${DOW_LABELS[d.getDay()]})`;
+      const classNames = (note.classes||[]).map(c=>c.name).join('、');
+      html += `
+        <div class="note-item" data-date="${date}" style="cursor:pointer;">
+          <div class="note-item-head">
+            <div class="note-item-meta">${label}${classNames?` ・ ${classNames}`:''}</div>
+          </div>
+          ${note.text ? `<div class="note-item-text">${escapeHtml(note.text)}</div>` : ''}
+          ${note.fb ? `<div class="note-item-fb">🥋 ${escapeHtml(note.fb)}</div>` : ''}
+          <div class="note-item-actions">
+            <button data-key="${escapeAttr(noteKey(dojo,date))}" class="delete-note">削除</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+
+  // Gemini学習ボタン
+  const connected = !!state.apiKey;
+  const totalRecords = Object.entries(state.notes).filter(([key,n])=>key.startsWith(dojo+"|") && ((n.classes&&n.classes.length)||(n.text&&n.text.trim()))).length;
+  html += `
+    <div class="card">
+      <div class="card-title">前提情報への反映</div>
+      <div class="empty" style="padding:8px 0 14px;text-align:left;">
+        ゴンズジムの記録（現在 ${totalRecords}件）を、Geminiが要約して「選手の背景・経歴」として目標設定タブの前提情報に反映します。
+      </div>
+      <button class="btn btn-primary" id="summarizePast" style="width:100%" ${(!connected||totalRecords===0)?'disabled':''}>
+        ${state.pastSummaryLoading ? '要約中...' : '過去実績をGeminiに学習させる'}
+      </button>
+      ${!connected ? `<div class="setup-help" style="margin-top:10px;">※ Gemini APIキーが必要です（目標設定タブで設定）。</div>` : ''}
+      ${totalRecords===0 ? `<div class="setup-help" style="margin-top:10px;">※ まずカレンダーに記録を追加してください。</div>` : ''}
+    </div>
+  `;
+
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('prevMonth').onclick = ()=>{
+    pastCalMonth = new Date(year, month-1, 1);
+    renderPastTab();
+  };
+  document.getElementById('nextMonth').onclick = ()=>{
+    pastCalMonth = new Date(year, month+1, 1);
+    renderPastTab();
+  };
+  document.getElementById('pastYearSelect').onchange = (e)=>{
+    pastCalMonth = new Date(parseInt(e.target.value), month, 1);
+    renderPastTab();
+  };
+  document.getElementById('pastMonthSelect').onchange = (e)=>{
+    pastCalMonth = new Date(year, parseInt(e.target.value), 1);
+    renderPastTab();
+  };
+  document.querySelectorAll('.month-cell[data-date]').forEach(el=>{
+    el.addEventListener('click',()=> openNoteModal(el.dataset.date, dojo));
+  });
+  document.querySelectorAll('.note-item[data-date]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      if(e.target.classList.contains('delete-note')) return;
+      openNoteModal(el.dataset.date, dojo);
+    });
+  });
+  document.querySelectorAll('.delete-note').forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      if(confirm('この記録を削除しますか？')){
+        delete state.notes[btn.dataset.key];
+        saveState();
+        renderAll();
+      }
+    };
+  });
+  const summarizeBtn = document.getElementById('summarizePast');
+  if(summarizeBtn && !summarizeBtn.disabled){
+    summarizeBtn.onclick = async ()=>{
+      state.pastSummaryLoading = true;
+      renderPastTab();
+      try{
+        const summary = await summarizePastRecords();
+        // 既存の背景情報の末尾に追記（重複しすぎないよう、過去実績セクションを置き換える形にする）
+        const marker = "\n\n【過去実績の要約（自動生成）】\n";
+        const existing = state.background || "";
+        const baseText = existing.split(marker)[0].trimEnd();
+        state.background = baseText + marker + summary;
+      }catch(err){
+        alert('要約エラー: ' + err.message);
+      }
+      state.pastSummaryLoading = false;
+      saveState();
+      renderPastTab();
+    };
+  }
+}
+
+const DOW_LABELS = ["日","月","火","水","木","金","土"];
+
+// 過去実績カレンダー（ゴンズジム）の全記録をGeminiに要約させる
+async function summarizePastRecords(){
+  const entries = Object.entries(state.notes)
+    .filter(([key,n])=> key.startsWith("gonz|") && ((n.classes&&n.classes.length) || (n.text&&n.text.trim())))
+    .map(([key,n])=>({date:key.split("|")[1], note:n}))
+    .sort((a,b)=> a.date.localeCompare(b.date));
+
+  const listText = entries.map(({date,note})=>{
+    const classNames = (note.classes||[]).map(c=>c.name).join('、');
+    const text = note.text||"";
+    return `${date}: ${classNames}${text?` / メモ: ${text}`:''}`;
+  }).join('\n');
+
+  const prompt = `以下は、ある格闘技選手がゴンズジム（神戸）で過去に練習した記録（日付ごとのクラスとメモ）です。この内容を読んで、選手の経歴・経験レベル・得意/不得意な分野・練習頻度の傾向を、3〜5文程度で日本語で要約してください。
+今後コーチがこの選手にアドバイスする際の「前提情報」として使われます。説明文や見出しは付けず、要約文のみを出力してください。
+
+記録:
+${listText}`;
+
+  return await callGemini(prompt);
+}
+
+/* ============================================================
+   RENDER: GOAL SETTING TAB
+   ============================================================ */
+function renderGoalTab(){
+  const connected = !!state.apiKey;
+  const balance = state.goalBalance;
+
+  let html = `
+    <div class="card">
+      <div class="card-title">前提情報（経歴・背景）</div>
+      <textarea id="backgroundInput" placeholder="例：2025年5月から格闘技未経験でスタート。週1回ペースで通っている。アマ修斗AクラスにMMAで年内に出たい、または、アマチュアビギナークラスでノーギグラップリングの大会に出たい、など現在の経験レベルや目指している方向性を書いてください。">${escapeHtml(state.background||"")}</textarea>
+      <div class="modal-actions" style="margin-top:10px;">
+        <button class="btn btn-primary btn-full" id="saveBackground">保存</button>
+      </div>
+      <div class="setup-help" style="margin-top:10px;">
+        ※ ここに書いた内容は、FB生成・バランス計算の両方でGeminiに前提として渡されます。<br>
+        ※「過去実績」タブでカレンダーに記録すると、Geminiに自動要約させてここに追記できます。
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">目標</div>
+      <textarea id="goalTextInput" placeholder="例：アマ修斗AクラスにMMAで年内に出たい／アマチュアビギナークラスのノーギグラップリングの大会に年内に出たい">${escapeHtml(state.goalText||"")}</textarea>
+      <div class="modal-actions" style="margin-top:10px;">
+        <button class="btn btn-primary btn-full" id="saveGoalText" ${connected?'':'disabled'}>
+          ${state.goalBalanceLoading ? '計算中...' : '保存してバランスを計算'}
+        </button>
+      </div>
+      ${!connected ? `<div class="setup-help" style="margin-top:10px;">※ バランス計算にはGemini APIキーが必要です。下のカードで設定してください。</div>` : ''}
+  `;
+
+  if(balance){
+    html += `
+      <div class="fb-box" style="margin-top:14px;">
+        <div class="fb-label">🥋 Geminiが提案する週間練習バランス</div>
+        <div class="fb-text">${SKILL_KEYS.map(k=>`${SKILL_META[k].label}: ${balance[k].toFixed(1)}h`).join(' ／ ')}</div>
+      </div>
+    `;
+  }
+  if(state.goalAdvice){
+    html += `
+      <div class="fb-box" style="margin-top:14px;">
+        <div class="fb-label">🎯 目標達成に向けた行動・ペースのアドバイス</div>
+        <div class="fb-text">${escapeHtml(state.goalAdvice)}</div>
+      </div>
+    `;
+  }
+  html += `</div>`;
+
+  html += `
+    <div class="card">
+      <div class="card-title">Gemini API 連携</div>
+      <div class="setup-box ${connected?'connected':''}">
+        <div class="status">
+          <div class="status-dot ${connected?'on':''}"></div>
+          ${connected ? 'APIキー設定済み（メモ保存時に自動でFBが届きます）' : '未設定'}
+        </div>
+        <input type="password" id="apiKeyInput" placeholder="Gemini APIキーを入力 (AIza...)" value="${state.apiKey||''}">
+        <button class="btn btn-primary" id="saveApiKey" style="width:100%">保存</button>
+        <div class="setup-help">
+          1. <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> にアクセス（Googleアカウントでログイン）<br>
+          2. 「Create API key」でキーを発行（無料）<br>
+          3. 発行されたキー（AIza...で始まる文字列）をここに貼り付けて保存<br><br>
+          ※ キーはこの端末のブラウザ内（localStorage）にのみ保存され、外部には送信されません。<br>
+          ※ 目標を保存すると、Geminiが目標に合わせた推奨練習バランス（スキルタブの目標ライン）を計算します。<br>
+          ※ 練習ノートを保存すると、Geminiが目標を踏まえたフィードバックを自動生成します。
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('content').innerHTML = html;
+
+  document.getElementById('saveBackground').onclick = ()=>{
+    state.background = document.getElementById('backgroundInput').value;
+    saveState();
+    const btn = document.getElementById('saveBackground');
+    btn.textContent = '保存しました ✓';
+    setTimeout(()=>{ btn.textContent = '保存'; },1500);
+  };
+
+  document.getElementById('saveGoalText').onclick = async ()=>{
+    const text = document.getElementById('goalTextInput').value.trim();
+    state.goalText = text;
+    saveState();
+
+    if(!text || !state.apiKey){
+      renderGoalTab();
+      return;
+    }
+
+    state.goalBalanceLoading = true;
+    renderGoalTab();
+    try{
+      const result = await calcGoalBalance(text);
+      state.goalBalance = result.balance;
+      state.goalAdvice = result.advice;
+    }catch(err){
+      alert('バランス計算エラー: ' + err.message);
+    }
+    state.goalBalanceLoading = false;
+    saveState();
+    renderGoalTab();
+  };
+  document.getElementById('saveApiKey').onclick = ()=>{
+    state.apiKey = document.getElementById('apiKeyInput').value.trim();
+    saveState();
+    renderGoalTab();
+  };
+}
+
+/* ============================================================
+   MAIN RENDER
+   ============================================================ */
+function renderAll(){
+  renderDojoSelect();
+  renderTabs();
+  if(activeTab==='calendar') renderCalendar();
+  else if(activeTab==='focus') renderFocusTab();
+  else if(activeTab==='skill') renderSkillTab();
+  else if(activeTab==='history') renderHistoryTab();
+  else if(activeTab==='past') renderPastTab();
+  else if(activeTab==='goal') renderGoalTab();
+}
+
+renderAll();
+</script>
+</body>
+</html>
