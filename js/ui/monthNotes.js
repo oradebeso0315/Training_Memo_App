@@ -24,7 +24,7 @@ export function monthNotesHtml({dojo, title, getMonth}){
   const years = Array.from({length:8}, (_,i)=> thisYear-6+i);
 
   let cells = '';
-  for(let i=0;i<startWeekday;i++) cells += `<div class="month-cell empty"></div>`;
+  for(let i=0;i<startWeekday;i++) cells += `<div class="month-cell blank"></div>`;
   for(let d=1; d<=daysInMonth; d++){
     const dateStr = ymd(new Date(year,month,d));
     const has = hasContent(getNote(dojo, dateStr));

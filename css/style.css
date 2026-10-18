@@ -73,6 +73,7 @@ body{
 .content{padding:16px 0 0;}
 
 .card{
+  min-width:0;
   background:var(--panel);border:1px solid var(--border);
   border-radius:12px;padding:16px;margin-bottom:12px;
 }
@@ -206,8 +207,8 @@ textarea:focus{border-color:var(--accent);}
   text-transform:uppercase;margin-bottom:8px;
   display:flex;align-items:center;gap:6px;
 }
-.fb-box .fb-text{font-size:13px;line-height:1.8;color:#cde8d8;white-space:pre-wrap;}
-.fb-box .fb-error{color:var(--bad);font-size:12px;}
+.fb-box .fb-text{font-size:13px;line-height:1.8;color:#cde8d8;white-space:pre-wrap;overflow-wrap:anywhere;}
+.fb-box .fb-error{color:var(--bad);font-size:12px;overflow-wrap:anywhere;}
 
 /* ── TODAY'S FOCUS ── */
 .focus-highlight{
@@ -221,7 +222,7 @@ textarea:focus{border-color:var(--accent);}
 }
 .focus-main{
   font-family:var(--font-display);
-  font-size:24px;font-weight:700;color:#fff;line-height:1.5;
+  font-size:24px;font-weight:700;color:#fff;line-height:1.5;overflow-wrap:anywhere;
 }
 .focus-reason{
   background:var(--panel2);border:1px solid var(--border);
@@ -231,7 +232,7 @@ textarea:focus{border-color:var(--accent);}
   font-size:9px;letter-spacing:3px;color:var(--sub);
   text-transform:uppercase;margin-bottom:8px;
 }
-.focus-reason-text{font-size:13px;line-height:1.8;color:#ccc;white-space:pre-wrap;}
+.focus-reason-text{font-size:13px;line-height:1.8;color:#ccc;white-space:pre-wrap;overflow-wrap:anywhere;}
 
 .radar-wrap{display:flex;flex-direction:column;align-items:center;}
 .radar-svg{width:100%;max-width:380px;}
@@ -313,11 +314,11 @@ textarea:focus{border-color:var(--accent);}
   font-size:9px;letter-spacing:2px;padding:2px 8px;border-radius:6px;
   text-transform:uppercase;white-space:nowrap;
 }
-.note-item-text{font-size:13px;line-height:1.7;color:#ccc;white-space:pre-wrap;}
+.note-item-text{font-size:13px;line-height:1.7;color:#ccc;white-space:pre-wrap;overflow-wrap:anywhere;}
 .note-item-fb{
   margin-top:10px;padding:10px 12px;border-radius:8px;
   background:#0d1a14;border:1px solid #1e3a2a;
-  font-size:12px;line-height:1.7;color:#bcdccb;white-space:pre-wrap;
+  font-size:12px;line-height:1.7;color:#bcdccb;white-space:pre-wrap;overflow-wrap:anywhere;
 }
 .note-item-actions{display:flex;gap:8px;margin-top:8px;}
 .note-item-actions button{
@@ -352,7 +353,8 @@ footer{
   font-size:13px;font-weight:700;padding:6px 8px;
 }
 .month-grid{
-  display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+  /* minmax(0,1fr): マスが中身の大きさに引っぱられず、必ず7等分に収まるように */
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;
 }
 .month-dow{
   text-align:center;font-size:10px;color:var(--sub);
@@ -363,10 +365,10 @@ footer{
   border:1px solid var(--border);display:flex;flex-direction:column;
   align-items:center;justify-content:center;cursor:pointer;
   font-size:12px;color:var(--sub);position:relative;transition:all .15s;
-  gap:2px;
+  gap:2px;min-width:0;
 }
 .month-cell:hover{border-color:var(--accent);}
-.month-cell.empty{background:transparent;border:none;cursor:default;}
+.month-cell.blank{background:transparent;border:none;cursor:default;}
 .month-cell.today{border-color:var(--accent);color:#fff;}
 .month-cell.has-record{
   background:#1a2a20;border-color:var(--good);color:#fff;
@@ -425,3 +427,17 @@ footer{
   font-family:var(--font-body);cursor:pointer;flex-shrink:0;
 }
 .sync-bar button.primary{background:var(--accent);border-color:var(--accent);color:#0a0d12;font-weight:700;}
+
+/* ── スマホ対応 ──
+   iPhoneのSafariは、16px未満の入力欄をタップすると画面を自動で拡大し、
+   そのまま戻らず画面が右にずれて見える。スマホ幅では入力欄を16pxにして防ぐ。 */
+@media (max-width: 640px){
+  textarea,
+  input,
+  select,
+  .period-select,
+  .month-nav-selects .period-select,
+  .setup-box input{
+    font-size:16px;
+  }
+}
