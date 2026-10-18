@@ -1113,6 +1113,10 @@ function getSkillsForClasses(classes){
     return sk;
   });
 }
+// ゴンズジムの組みの日（打込み＋スパー）は合わせて0.2hで計算する
+const GONZ_KUMI_CLASSES = ["組み打込み","組みスパー"];
+const GONZ_KUMI_HOURS = 0.2;
+
 // dojo: 文字列なら該当道場のみ、nullなら全道場合算
 // period: "month" (今月) / "year" (今年) / "total" (累計)
 function calcSkillTotals(dojo, period){
@@ -1128,7 +1132,17 @@ function calcSkillTotals(dojo, period){
     if(period==="month" && !dateStr.startsWith(monthPrefix)) return;
     if(period==="year" && !dateStr.startsWith(yearPrefix)) return;
     const skills = getSkillsForClasses(note.classes);
+    // ゴンズジムの「組み」の日は、打込み＋スパーをまとめて1回 0.2h として数える
+    const isGonz = key.startsWith("gonz|");
+    let gonzKumiCounted = false;
     note.classes.forEach((c,i)=>{
+      if(isGonz && GONZ_KUMI_CLASSES.includes(c.name)){
+        if(!gonzKumiCounted){
+          totals[skills[i]] += GONZ_KUMI_HOURS;
+          gonzKumiCounted = true;
+        }
+        return;
+      }
       const dur = durationHours(c.start,c.end);
       totals[skills[i]] += dur;
     });
