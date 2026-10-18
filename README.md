@@ -22,6 +22,7 @@ iPhone買い替えのコストやストレージ問題も考慮した結果、
 - Gemini APIで「今日の意識」を練習前に1点提案（今日のクラス内容と過去の記録を加味）
 - Gemini APIで目標に対する週間練習バランスと行動アドバイスを生成
 - 過去のジム（神戸）時代の実績も入力・管理可能
+- Googleログインでクラウド保存（iPhone・PC間で同じデータを共有、ブラウザのデータ削除でも消えない）
 
 ## 技術構成
 
@@ -29,9 +30,21 @@ iPhone買い替えのコストやストレージ問題も考慮した結果、
 |------|------|
 | フロントエンド | HTML / CSS / Vanilla JavaScript |
 | AI連携 | Gemini API（gemini-2.5-flash-lite） |
-| データ保存 | localStorage |
+| データ保存 | Firebase Firestore（Googleログイン）＋ localStorage（オフライン用コピー） |
 | ホスティング | GitHub Pages |
 
 ## デモ
 
 https://oradebeso0315.github.io/Training_Memo_App/
+
+## データ保存の改善（localStorage → Firebase）
+
+当初はlocalStorageのみに保存していたが、iPhone Safariではしばらく開かないとサイトのデータが自動削除される仕様があり、
+練習ノートやAPIキーが消える問題が起きた。また、iPhoneとPCでデータを共有できなかった。
+
+そこでFirebase Authentication（Googleログイン）＋ Cloud Firestore に保存先を変更。
+
+- データは `users/{uid}` のドキュメントに保存し、セキュリティルール（`firestore.rules`）で本人以外は読み書きできないようにした
+- 初回ログイン時は、その端末に残っていたlocalStorageのデータとクラウドのデータを合流させて移行
+- 2回目以降はクラウドのデータを正とし、アプリに戻ってきたタイミングで他端末の更新を取り込む
+- localStorageはオフライン用のコピーとして引き続き使用

@@ -413,7 +413,31 @@ footer{
 .class-pick-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .class-pick-name{flex:1;font-size:12px;color:#fff;}
 .class-pick-time{font-size:10px;color:var(--sub);}
+
+/* ── SYNC BAR (Firebase) ── */
+.sync-bar{
+  display:flex;align-items:center;gap:10px;
+  margin-top:16px;padding:10px 12px;border-radius:10px;
+  border:1px solid var(--border);background:var(--panel);
+  font-size:11px;color:var(--sub);
+}
+.sync-bar .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--sub);flex-shrink:0;}
+.sync-bar .sync-dot.on{background:var(--good);}
+.sync-bar .sync-dot.busy{background:var(--accent);}
+.sync-bar .sync-dot.err{background:var(--bad);}
+.sync-bar .sync-text{flex:1;line-height:1.5;word-break:break-all;}
+.sync-bar button{
+  padding:7px 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel2);color:var(--text);font-size:11px;
+  font-family:var(--font-body);cursor:pointer;flex-shrink:0;
+}
+.sync-bar button.primary{background:var(--accent);border-color:var(--accent);color:#0a0d12;font-weight:700;}
 </style>
+
+<!-- Firebase (compat版: 通常の<script>からそのまま使える) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -424,6 +448,7 @@ footer{
 </div>
 
 <div class="app">
+  <div class="sync-bar" id="syncBar"></div>
   <div class="dojo-select" id="dojoSelect"></div>
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="calendar">カレンダー</button>
@@ -434,7 +459,7 @@ footer{
     <button class="tab" data-tab="goal">目標設定</button>
   </div>
   <div class="content" id="content"></div>
-  <footer>WAJUTSU KEISHUKAI · LOCAL STORAGE ONLY</footer>
+  <footer>WAJUTSU KEISHUKAI · CLOUD SYNC (FIREBASE)</footer>
 </div>
 
 <div id="modalRoot"></div>
@@ -776,26 +801,34 @@ const DEFAULT_BACKGROUND = `【ゴンズジム時代（神戸）】
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(!parsed.pastNotes) parsed.pastNotes = {};
-      if(parsed.pastSummaryLoading===undefined) parsed.pastSummaryLoading = false;
-      if(parsed.focusSuggestion===undefined) parsed.focusSuggestion = null;
-      if(parsed.goalAdvice===undefined) parsed.goalAdvice = "";
-      parsed.focusLoading = false;
-      parsed.focusError = null;
-      if(!parsed.background || !parsed.background.trim()) parsed.background = DEFAULT_BACKGROUND;
-      // マイグレーション: 旧形式のnotesキー(dojo|day|className|start)を削除
-      if(parsed.notes){
-        Object.keys(parsed.notes).forEach(key=>{
-          if(key.split("|").length > 2){
-            delete parsed.notes[key];
-          }
-        });
-      }
-      return parsed;
-    }
+    if(raw) return normalizeState(JSON.parse(raw));
   }catch(e){}
+  return defaultState();
+}
+
+// 保存データの形を整える（古い形式の補正もここで行う）
+function normalizeState(parsed){
+  if(!parsed || typeof parsed !== "object") return defaultState();
+  if(!parsed.dojo) parsed.dojo = "hearts_shinjuku";
+  if(!parsed.notes) parsed.notes = {};
+  if(!parsed.pastNotes) parsed.pastNotes = {};
+  if(parsed.apiKey===undefined) parsed.apiKey = "";
+  if(parsed.focusSuggestion===undefined) parsed.focusSuggestion = null;
+  if(parsed.goalAdvice===undefined) parsed.goalAdvice = "";
+  if(!parsed.background || !parsed.background.trim()) parsed.background = DEFAULT_BACKGROUND;
+  // 「読み込み中」などの一時的な状態はリセット
+  parsed.focusLoading = false;
+  parsed.focusError = null;
+  parsed.goalBalanceLoading = false;
+  parsed.pastSummaryLoading = false;
+  // マイグレーション: 旧形式のnotesキー(dojo|day|className|start)を削除
+  Object.keys(parsed.notes).forEach(key=>{
+    if(key.split("|").length > 2) delete parsed.notes[key];
+  });
+  return parsed;
+}
+
+function defaultState(){
   return {
     dojo:"hearts_shinjuku",
     notes:{},
@@ -812,8 +845,203 @@ function loadState(){
     focusError: null,
   };
 }
+/* ============================================================
+   CLOUD SYNC (Firebase: Googleログイン + Firestore)
+   ------------------------------------------------------------
+   ・Googleでログインすると、データを Firestore の users/{uid} に保存
+   ・iPhone / PC など、同じGoogleアカウントならどの端末でも同じデータ
+   ・localStorage は「オフライン用のコピー」として引き続き使う
+   ============================================================ */
+
+// ▼ Firebaseコンソール「プロジェクトの設定 > マイアプリ」に出てくる値を貼り付ける
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+};
+
+const MERGED_FLAG_KEY = "keishukai_cloud_merged_uid"; // この端末の古いデータをクラウドに合流済みか
+const TRANSIENT_KEYS = ["focusLoading","focusError","goalBalanceLoading","pastSummaryLoading"];
+
+const cloud = {
+  enabled: false,   // FIREBASE_CONFIG が設定済みか
+  ready: false,     // ログイン状態の確認が終わったか
+  user: null,
+  db: null,
+  status: "idle",   // idle / loading / saving / saved / error
+  error: "",
+  saveTimer: null,
+};
+
+function stateForStorage(){
+  const copy = JSON.parse(JSON.stringify(state));
+  TRANSIENT_KEYS.forEach(k=> delete copy[k]);
+  return copy;
+}
+
 function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // 1) まず端末内にすぐ保存（オフラインでも消えないように）
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  // 2) ログイン中ならクラウドにも保存（連続保存をまとめるため少し待つ）
+  if(cloud.user){
+    clearTimeout(cloud.saveTimer);
+    cloud.saveTimer = setTimeout(pushToCloud, 600);
+  }
+}
+
+function userDocRef(){
+  return cloud.db.collection("users").doc(cloud.user.uid);
+}
+
+async function pushToCloud(){
+  if(!cloud.user) return;
+  cloud.saveTimer = null;
+  setSyncStatus("saving");
+  try{
+    // Firestoreは配列の入れ子などに制限があるので、JSON文字列として丸ごと保存する
+    await userDocRef().set({
+      data: JSON.stringify(stateForStorage()),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    setSyncStatus("saved");
+  }catch(err){
+    setSyncStatus("error", err.message);
+  }
+}
+
+async function pullFromCloud(){
+  const snap = await userDocRef().get();
+  if(!snap.exists || !snap.data().data) return null;
+  return JSON.parse(snap.data().data);
+}
+
+// 初回ログイン時：この端末に残っているデータとクラウドのデータを合流させる
+function mergeStates(local, remote){
+  const merged = Object.assign({}, local, remote);
+  merged.notes = Object.assign({}, local.notes||{}, remote.notes||{});
+  merged.pastNotes = Object.assign({}, local.pastNotes||{}, remote.pastNotes||{});
+  ["apiKey","goalText","goalAdvice","goalBalance","focusSuggestion"].forEach(k=>{
+    if(!remote[k] && local[k]) merged[k] = local[k];
+  });
+  if((!remote.background || remote.background===DEFAULT_BACKGROUND) && local.background){
+    merged.background = local.background;
+  }
+  return merged;
+}
+
+async function syncAfterLogin(){
+  setSyncStatus("loading");
+  try{
+    const remote = await pullFromCloud();
+    const alreadyMerged = localStorage.getItem(MERGED_FLAG_KEY) === cloud.user.uid;
+    if(!remote){
+      // クラウドが空 → この端末のデータをそのままアップロード（初回移行）
+      await pushToCloud();
+    }else if(!alreadyMerged){
+      state = normalizeState(mergeStates(stateForStorage(), remote));
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+      await pushToCloud();
+    }else{
+      // 2回目以降はクラウドが正
+      state = normalizeState(remote);
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+      setSyncStatus("saved");
+    }
+    try{ localStorage.setItem(MERGED_FLAG_KEY, cloud.user.uid); }catch(e){}
+    renderAll();
+  }catch(err){
+    setSyncStatus("error", err.message);
+  }
+}
+
+// アプリに戻ってきたとき、別の端末で更新された内容を取り込む
+async function refreshFromCloud(){
+  if(!cloud.user || cloud.saveTimer || cloud.status==="saving") return;
+  if(document.getElementById('modalRoot').children.length) return; // 入力中は邪魔しない
+  try{
+    const remote = await pullFromCloud();
+    if(remote){
+      state = normalizeState(remote);
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+      renderAll();
+    }
+  }catch(e){}
+}
+
+async function signIn(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try{
+    await firebase.auth().signInWithPopup(provider);
+  }catch(err){
+    if(err.code==="auth/popup-blocked" || err.code==="auth/operation-not-supported-in-this-environment"){
+      await firebase.auth().signInWithRedirect(provider);
+    }else if(err.code!=="auth/popup-closed-by-user" && err.code!=="auth/cancelled-popup-request"){
+      alert("ログインに失敗しました: " + err.message);
+    }
+  }
+}
+
+async function signOut(){
+  if(cloud.saveTimer){ clearTimeout(cloud.saveTimer); await pushToCloud(); }
+  await firebase.auth().signOut();
+}
+
+function setSyncStatus(status, error){
+  cloud.status = status;
+  cloud.error = error || "";
+  renderSyncBar();
+}
+
+function renderSyncBar(){
+  const bar = document.getElementById('syncBar');
+  if(!bar) return;
+  let dot = "", text = "", btn = "";
+  if(!cloud.enabled){
+    text = "クラウド未設定：この端末のブラウザ内だけに保存中";
+  }else if(!cloud.ready){
+    dot = "busy"; text = "ログイン状態を確認中...";
+  }else if(!cloud.user){
+    text = "Googleでログインすると、iPhoneとPCで同じデータを使えて、消えなくなります";
+    btn = `<button class="primary" id="signInBtn">Googleでログイン</button>`;
+  }else{
+    const who = escapeHtml(cloud.user.email || cloud.user.displayName || "ログイン中");
+    const msg = {
+      loading:"クラウドから読み込み中...",
+      saving:"クラウドに保存中...",
+      saved:"クラウドに保存済み",
+      error:"保存エラー: " + escapeHtml(cloud.error),
+      idle:"同期待ち",
+    }[cloud.status] || "";
+    dot = {saved:"on", error:"err", loading:"busy", saving:"busy"}[cloud.status] || "";
+    text = `${who}<br>${msg}`;
+    btn = `<button id="signOutBtn">ログアウト</button>`;
+  }
+  bar.innerHTML = `<div class="sync-dot ${dot}"></div><div class="sync-text">${text}</div>${btn}`;
+  const inBtn = document.getElementById('signInBtn');
+  if(inBtn) inBtn.onclick = signIn;
+  const outBtn = document.getElementById('signOutBtn');
+  if(outBtn) outBtn.onclick = ()=>{ if(confirm('ログアウトしますか？（データはクラウドに残ります）')) signOut(); };
+}
+
+function initCloud(){
+  cloud.enabled = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId && window.firebase);
+  if(!cloud.enabled){ renderSyncBar(); return; }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  cloud.db = firebase.firestore();
+  firebase.auth().getRedirectResult().catch(err=> alert("ログインに失敗しました: " + err.message));
+  firebase.auth().onAuthStateChanged(user=>{
+    cloud.ready = true;
+    cloud.user = user;
+    if(user) syncAfterLogin();
+    else setSyncStatus("idle");
+  });
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='visible') refreshFromCloud();
+  });
+  renderSyncBar();
 }
 
 let state = loadState();
@@ -1905,7 +2133,7 @@ function renderGoalTab(){
           1. <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> にアクセス（Googleアカウントでログイン）<br>
           2. 「Create API key」でキーを発行（無料）<br>
           3. 発行されたキー（AIza...で始まる文字列）をここに貼り付けて保存<br><br>
-          ※ キーはこの端末のブラウザ内（localStorage）にのみ保存され、外部には送信されません。<br>
+          ※ Googleでログイン中は、キーもあなた専用のクラウド領域（Firebase）に保存され、iPhone・PCの両方で使えます。本人以外は読めない設定です。<br>
           ※ 目標を保存すると、Geminiが目標に合わせた推奨練習バランス（スキルタブの目標ライン）を計算します。<br>
           ※ 練習ノートを保存すると、Geminiが目標を踏まえたフィードバックを自動生成します。
         </div>
@@ -1968,6 +2196,7 @@ function renderAll(){
 }
 
 renderAll();
+initCloud();
 </script>
 </body>
 </html>
