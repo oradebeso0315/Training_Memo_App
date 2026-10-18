@@ -470,11 +470,11 @@ footer{
    ============================================================ */
 const SKILL_META = {
   striking:{label:"打撃", hex:"#e0524d"},
-  jiujitsu:{label:"柔術", hex:"#4d8b6e"},
-  grappling:{label:"組み", hex:"#4d7be0"},
+  gi:{label:"ギあり", hex:"#4d8b6e"},
+  nogi:{label:"ノーギ", hex:"#4d7be0"},
   mma:{label:"MMA", hex:"#b08ae0"},
 };
-const SKILL_KEYS = ["striking","jiujitsu","grappling","mma"];
+const SKILL_KEYS = ["striking","nogi","gi","mma"];
 
 // クラスごとの表示固有色（画像のスケジュール表に準拠）
 const CLASS_COLORS = {
@@ -507,6 +507,12 @@ const CLASS_COLORS = {
   "グラップリングスパー":"#4a3a6a",
   "グラップリング中級":"#8b6db5",
   "MMAレスリング":"#e8943a",
+  "MMAフィジカルトレーニング":"#e07a2a",
+  "アマチュアMMA":"#f0a830",
+  "キック&サンドバックミット":"#cfe3ee",
+  "超初級グラップリング&柔術基礎":"#c5b8e0",
+  "グラップリング&柔術":"#9fc88f",
+  "グラップリング&柔術スパー":"#9fc88f",
   "MMAテクニック":"#b08ae0",
   "MMA初級ク":"#e8943a",
   "ボクシングテクニック":"#e0524d",
@@ -534,14 +540,17 @@ function getTextColorFor(hex){
 const SKILL_MAP = {
   "高強度サーキット":"striking","キックテクニック":"striking","ライトスパー":"striking",
   "ボクシングテクニック":"striking","キック上級":"striking","キック":"striking",
-  "柔術オールクラス":"jiujitsu","柔術スパー":"jiujitsu","柔術テクニック":"jiujitsu",
-  "グラップリングテクニック":"grappling","グラップリングスパー":"grappling",
-  "グラップリング中級":"grappling","MMAレスリング":"grappling","組み技スパー":"grappling",
+  "柔術オールクラス":"gi","柔術スパー":"gi","柔術テクニック":"gi",
+  "グラップリングテクニック":"nogi","グラップリングスパー":"nogi",
+  "グラップリング中級":"nogi","MMAレスリング":"mma","組み技スパー":"nogi",
+  "MMAフィジカルトレーニング":"mma","アマチュアMMA":"mma",
+  "キック&サンドバックミット":"striking","サンドバックミット":"striking",
+  "超初級グラップリング&柔術基礎":"nogi","グラップリング&柔術":"nogi","グラップリング&柔術スパー":"nogi",
   "MMA初級":"mma","MMAテクニック":"mma","アマチュア選手志望練習":"mma","MMAスパー":"mma",
   "フリーウェイト":"mma","ウェイトトレーニング":"mma","ストレッチ":"mma",
   "打撃クラス":"striking","打撃スパー":"striking",
-  "極めクラス":"jiujitsu","極めスパー":"jiujitsu",
-  "投げクラス":"grappling","投げスパー":"grappling",
+  "極めクラス":"nogi","極めスパー":"nogi",
+  "投げクラス":"nogi","投げスパー":"nogi",
   "総合スパー":"mma","初心者クラス":"mma","体験会":"mma",
   // KIX 新宿・駒沢で使用するクラス
   "フリートレーニング":"mma",
@@ -552,24 +561,24 @@ const SKILL_MAP = {
   "キックボクシングフォーム作りプリーミット":"striking",
   "キックボクシングフォーム指導フリーミット":"striking",
   "サーキット":"striking",
-  "グラップリング初級":"grappling","グラップリング超初級":"grappling",
-  "グラップリング":"grappling","グラップリングテクニック":"grappling",
+  "グラップリング初級":"nogi","グラップリング超初級":"nogi",
+  "グラップリング":"nogi","グラップリングテクニック":"nogi",
   "キッズ":"mma",
   "サンドバック":"striking",
   "MMA":"mma","MMAスパー":"mma",
   // ゴンズジム（過去）で使用するクラス
-  "寝技打込み":"jiujitsu","寝技スパー":"jiujitsu",
+  "寝技打込み":"nogi","寝技スパー":"nogi",
   "キック打込み":"striking","キックスパー":"striking",
-  "組み打込み":"grappling","組みスパー":"grappling",
-  "ミット&寝技打込み":"jiujitsu",
+  "組み打込み":"nogi","組みスパー":"nogi",
+  "ミット&寝技打込み":"nogi",
   "MMA打込み":"mma",
-  "着あり寝技打込み":"jiujitsu","着ありスパー":"jiujitsu",
+  "着あり寝技打込み":"gi","着ありスパー":"gi",
 };
 
 const SCHEDULES = {
   hearts_shinjuku:{
     name:"和術慧舟會HEARTS", sub:"新宿",
-    gridStart: 14, gridEnd: 23, // 表示する時間帯(時)
+    gridStart: 14, gridEnd: 23,
     days:{
       月:[
         {name:"フリートレーニング",start:"15:00",end:"22:30"},
@@ -615,14 +624,14 @@ const SCHEDULES = {
       ],
       土:[
         {name:"フリートレーニング",start:"14:00",end:"19:00"},
-        {name:"MMAレスリング",start:"14:00",end:"15:30"},
+        {name:"MMAフィジカルトレーニング",start:"14:00",end:"15:00"},
         {name:"キックテクニック",start:"16:00",end:"16:30"},
         {name:"ライトスパー",start:"16:30",end:"17:00"},
         {name:"MMAテクニック",start:"17:30",end:"19:00"},
       ],
       日:[
         {name:"フリートレーニング",start:"14:00",end:"19:00"},
-        {name:"MMAレスリング",start:"14:00",end:"15:30"},
+        {name:"MMAフィジカルトレーニング",start:"14:00",end:"15:00"},
         {name:"キックテクニック",start:"16:00",end:"16:30"},
         {name:"ライトスパー",start:"16:30",end:"17:00"},
         {name:"MMAテクニック",start:"17:30",end:"19:00"},
@@ -652,10 +661,10 @@ const SCHEDULES = {
       水:[
         {name:"フリートレーニング",start:"8:00",end:"22:00"},
         {name:"グラップリング初級",start:"16:00",end:"17:00"},
-        {name:"サーキット",start:"19:00",end:"19:30"},
-        {name:"キック初級",start:"19:30",end:"20:00"},
-        {name:"ライトスパー",start:"20:00",end:"20:30"},
-        {name:"グラップリング初級",start:"21:00",end:"22:00"},
+        {name:"キック&サンドバックミット",start:"19:00",end:"20:00"},
+        {name:"超初級グラップリング&柔術基礎",start:"20:30",end:"21:00"},
+        {name:"グラップリング&柔術",start:"21:00",end:"21:30"},
+        {name:"グラップリング&柔術スパー",start:"21:30",end:"22:00"},
       ],
       木:[
         {name:"フリートレーニング",start:"8:00",end:"22:00"},
@@ -695,58 +704,66 @@ const SCHEDULES = {
     gridStart: 8, gridEnd: 23,
     days:{
       月:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
         {name:"サンドバックミット",start:"15:45",end:"16:30"},
         {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"フィットネス",start:"18:00",end:"18:30"},
+        {name:"サンドバックミット",start:"18:30",end:"19:00"},
         {name:"キック超初級",start:"19:30",end:"20:00"},
         {name:"ライトスパー",start:"20:00",end:"20:30"},
         {name:"グラップリング",start:"20:40",end:"22:00"},
       ],
       火:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
         {name:"キッズ",start:"16:30",end:"17:30"},
-        {name:"サンドバックミット",start:"19:30",end:"20:00"},
-        {name:"MMA初級",start:"20:40",end:"21:15"},
+        {name:"キック初級",start:"18:00",end:"19:00"},
+        {name:"サンドバックミット",start:"19:30",end:"20:30"},
+        {name:"MMA初級",start:"20:40",end:"22:00"},
       ],
       水:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
         {name:"サンドバックミット",start:"15:45",end:"16:30"},
         {name:"ライトスパー",start:"16:30",end:"17:00"},
-        {name:"フィットネス",start:"19:00",end:"19:30"},
-        {name:"サンドバックミット",start:"19:30",end:"20:00"},
+        {name:"アマチュアMMA",start:"18:00",end:"19:20"},
+        {name:"フィットネス",start:"19:30",end:"20:00"},
+        {name:"サンドバックミット",start:"20:00",end:"20:30"},
         {name:"キック初級",start:"20:40",end:"21:15"},
         {name:"ライトスパー",start:"21:15",end:"22:00"},
       ],
       木:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
         {name:"キッズ",start:"16:30",end:"17:30"},
-        {name:"サンドバックミット",start:"19:30",end:"20:00"},
+        {name:"キック初級",start:"18:00",end:"19:00"},
+        {name:"サンドバックミット",start:"19:30",end:"20:30"},
         {name:"キック初級",start:"20:40",end:"21:15"},
         {name:"ライトスパー",start:"21:15",end:"22:00"},
       ],
       金:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
         {name:"サンドバックミット",start:"15:45",end:"16:30"},
         {name:"ライトスパー",start:"16:30",end:"17:00"},
+        {name:"フィットネス",start:"18:00",end:"18:30"},
+        {name:"サンドバックミット",start:"18:30",end:"19:00"},
         {name:"キック超初級",start:"19:30",end:"20:00"},
         {name:"ライトスパー",start:"20:00",end:"20:30"},
         {name:"MMA初級",start:"20:40",end:"22:00"},
       ],
       土:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
-        {name:"柔術オールクラス",start:"9:30",end:"10:45"},
-        {name:"フィットネス",start:"11:00",end:"11:45"},
-        {name:"サンドバックミット",start:"11:45",end:"12:30"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
+        {name:"サーキット",start:"11:00",end:"11:45"},
+        {name:"サンドバックミット",start:"11:45",end:"12:15"},
         {name:"キック初級",start:"13:00",end:"13:30"},
         {name:"ライトスパー",start:"13:30",end:"14:00"},
+        {name:"グラップリングテクニック",start:"14:30",end:"16:00"},
       ],
       日:[
-        {name:"フリートレーニング",start:"8:00",end:"22:00"},
-        {name:"柔術オールクラス",start:"9:30",end:"10:45"},
-        {name:"フィットネス",start:"11:00",end:"11:45"},
-        {name:"サンドバックミット",start:"11:45",end:"12:30"},
+        {name:"フリートレーニング",start:"8:00",end:"22:30"},
+        {name:"サーキット",start:"11:00",end:"11:45"},
+        {name:"サンドバックミット",start:"11:45",end:"12:15"},
         {name:"キック初級",start:"13:00",end:"13:30"},
         {name:"ライトスパー",start:"13:30",end:"14:00"},
+        {name:"MMA",start:"14:30",end:"15:15"},
+        {name:"MMAスパー",start:"15:15",end:"16:00"},
       ],
     }
   },
@@ -816,6 +833,11 @@ function normalizeState(parsed){
   if(parsed.focusSuggestion===undefined) parsed.focusSuggestion = null;
   if(parsed.goalAdvice===undefined) parsed.goalAdvice = "";
   if(!parsed.background || !parsed.background.trim()) parsed.background = DEFAULT_BACKGROUND;
+  // 旧カテゴリ(柔術/組み)の目標バランスを新カテゴリ(ギあり/ノーギ)へ移行
+  if(parsed.goalBalance && (parsed.goalBalance.jiujitsu!==undefined || parsed.goalBalance.grappling!==undefined)){
+    const b = parsed.goalBalance;
+    parsed.goalBalance = {striking:b.striking||0, nogi:b.grappling||0, gi:b.jiujitsu||0, mma:b.mma||0};
+  }
   // 「読み込み中」などの一時的な状態はリセット
   parsed.focusLoading = false;
   parsed.focusError = null;
@@ -835,7 +857,7 @@ function defaultState(){
     pastNotes:{}, // key: "YYYY-MM-DD" -> メモ文字列（ゴンズジム時代などの過去実績）
     background: DEFAULT_BACKGROUND,
     goalText: "",
-    goalBalance: null, // {striking,jiujitsu,grappling,mma} 推奨週間時間(h) - Geminiが計算
+    goalBalance: null, // {striking,gi,nogi,mma} 推奨週間時間(h) - Geminiが計算
     goalAdvice: "", // 行動面・ペース面のアドバイス - Geminiが計算
     goalBalanceLoading: false,
     pastSummaryLoading: false,
@@ -855,12 +877,12 @@ function defaultState(){
 
 // ▼ Firebaseコンソール「プロジェクトの設定 > マイアプリ」に出てくる値を貼り付ける
 const FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyD-XcK4fbwTkMJ_lJSvGh72cq4Jwr5pAJc",
+  authDomain: "training-apps-d032b.firebaseapp.com",
+  projectId: "training-apps-d032b",
+  storageBucket: "training-apps-d032b.firebasestorage.app",
+  messagingSenderId: "175847623227",
+  appId: "1:175847623227:web:c3d96d8d53827dd4d02a1e",
 };
 
 const MERGED_FLAG_KEY = "keishukai_cloud_merged_uid"; // この端末の古いデータをクラウドに合流済みか
@@ -1094,7 +1116,7 @@ function getSkillsForClasses(classes){
 // dojo: 文字列なら該当道場のみ、nullなら全道場合算
 // period: "month" (今月) / "year" (今年) / "total" (累計)
 function calcSkillTotals(dojo, period){
-  const totals = {striking:0,jiujitsu:0,grappling:0,mma:0};
+  const totals = {striking:0,gi:0,nogi:0,mma:0};
   const now = new Date();
   const yearPrefix = String(now.getFullYear());
   const monthPrefix = `${yearPrefix}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -1604,7 +1626,7 @@ ${logText}`;
   return await callGemini(prompt);
 }
 
-// 目標テキストから打撃/柔術/組み/MMAの推奨週間練習時間(h)をJSONで取得
+// 目標テキストから打撃/ノーギ/ギあり/MMAの推奨週間練習時間(h)をJSONで取得
 async function calcGoalBalance(goalText){
   const bgText = state.background?.trim();
   const bgLine = bgText ? `\n選手の背景・経歴:\n${bgText}\n` : "";
@@ -1615,19 +1637,19 @@ async function calcGoalBalance(goalText){
 ${bgLine}
 カテゴリの定義:
 - 打撃: キックボクシング、ボクシングなどの打撃技術・スパー
-- 柔術: 柔術の技術・スパー
-- 組み: レスリングやノーギグラップリングなどの組み技・スパー
+- ノーギ: 道着なしの組み技・寝技（グラップリング）の技術・スパー
+- ギあり: 道着ありの柔術の技術・スパー
 - MMA: MMA総合練習、アマチュア選手向け練習
 
 選手の目標:
 ${goalText}
 
-1つ目: 目標達成のために理想的な「週間の練習時間バランス」を、打撃・柔術・組み・MMAの4カテゴリで提案（数値は週あたりの時間数、0〜15の範囲、小数可）。
+1つ目: 目標達成のために理想的な「週間の練習時間バランス」を、打撃・ノーギ・ギあり・MMAの4カテゴリで提案（数値は週あたりの時間数、0〜15の範囲、小数可）。
 
 2つ目: 「週間の練習時間バランス」だけでは目標達成に不十分な場合があります（例: 週1回ペースを1年続けても大会出場という行動目標には届かなかった、というケースもあります）。練習時間の配分に加えて、目標を達成するために必要な「行動面・ペース面のアドバイス」を3〜4文程度で日本語で書いてください。通う頻度、大会エントリーや申し込みのタイミング、スパー経験量の確保など、技術練習の配分だけでは見落としがちな点に触れてください。
 
 出力は説明文なしで、以下のJSON形式のみを返してください:
-{"balance":{"striking":数値,"jiujitsu":数値,"grappling":数値,"mma":数値},"advice":"行動面・ペース面のアドバイス文"}`;
+{"balance":{"striking":数値,"nogi":数値,"gi":数値,"mma":数値},"advice":"行動面・ペース面のアドバイス文"}`;
 
   const raw = await callGemini(prompt);
   // strip code fences if any
@@ -1649,7 +1671,7 @@ ${goalText}
    ============================================================ */
 function renderSkillTab(){
   const totals = calcSkillTotals(null, skillPeriod);
-  const balance = getGoalForPeriod(skillPeriod); // null or {striking,jiujitsu,grappling,mma}（期間に応じた目標値）
+  const balance = getGoalForPeriod(skillPeriod); // null or {striking,gi,nogi,mma}（期間に応じた目標値）
   const PERIOD_LABELS = {month:"今月", year:"今年", total:"累計"};
 
   const size=340, cx=size/2, cy=size/2, r=130;
@@ -1686,7 +1708,7 @@ function renderSkillTab(){
   });
 
   const svg = `
-    <svg class="radar-svg" viewBox="0 0 ${size} ${size}">
+    <svg class="radar-svg" viewBox="-40 0 ${size+80} ${size}" style="overflow:visible">
       ${gridSvg}
       ${axisSvg}
       ${goalPts ? `<polygon points="${poly(goalPts)}" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>` : ''}
