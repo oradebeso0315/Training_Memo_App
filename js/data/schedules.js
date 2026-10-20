@@ -2,11 +2,12 @@
  * 道場ごとの週間スケジュール
  *  - gridStart / gridEnd: カレンダーに表示する時間帯（時）
  *  - days: 曜日ごとのクラス一覧（"フリートレーニング" は背景として表示）
+ *  - short / color: ノート一覧・カレンダーでの道場の略称と色
  *  - gonz は過去に通っていたジム（過去実績タブ専用）
  */
 export const SCHEDULES = {
   hearts_shinjuku:{
-    name:"和術慧舟會HEARTS", sub:"新宿",
+    name:"和術慧舟會HEARTS", sub:"新宿", short:"HEARTS", color:"#c8a06e",
     gridStart: 14, gridEnd: 23,
     days:{
       月:[
@@ -68,7 +69,7 @@ export const SCHEDULES = {
     }
   },
   kix_shinjuku:{
-    name:"HEARTS KIX", sub:"新宿",
+    name:"HEARTS KIX", sub:"新宿", short:"KIX 新宿", color:"#3eb8c8",
     gridStart: 8, gridEnd: 23,
     days:{
       月:[
@@ -129,7 +130,7 @@ export const SCHEDULES = {
     }
   },
   kix_komazawa:{
-    name:"HEARTS KIX", sub:"駒沢",
+    name:"HEARTS KIX", sub:"駒沢", short:"KIX 駒沢", color:"#5b8def",
     gridStart: 8, gridEnd: 23,
     days:{
       月:[
@@ -197,7 +198,7 @@ export const SCHEDULES = {
     }
   },
   gonz:{
-    name:"ゴンズジム", sub:"神戸（過去）",
+    name:"ゴンズジム", sub:"神戸（過去）", short:"ゴンズ", color:"#5cb88a",
     gridStart: 19, gridEnd: 22,
     days:{
       月:[
@@ -231,3 +232,6 @@ export const SCHEDULES = {
 
 // 過去実績タブ専用の道場
 export const PAST_DOJO = "gonz";
+
+// 今通っている道場（ノートタブで記録できる道場）
+export const CURRENT_DOJOS = Object.keys(SCHEDULES).filter(k=> k!==PAST_DOJO);

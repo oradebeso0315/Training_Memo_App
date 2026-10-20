@@ -12,7 +12,7 @@ const SUMMARY_MARKER = "\n\n【過去実績の要約（自動生成）】\n";
 
 export function renderPastTab(el){
   const opt = {
-    dojo: PAST_DOJO,
+    dojos: [PAST_DOJO],
     title: "過去実績（ゴンズジム / 神戸） - 日付を選んでクラス＋メモを記録",
     getMonth: ()=> state.ui.pastCalMonth,
     setMonth: (d)=>{ state.ui.pastCalMonth = d; },

@@ -369,13 +369,38 @@ footer{
 }
 .month-cell:hover{border-color:var(--accent);}
 .month-cell.blank{background:transparent;border:none;cursor:default;}
-.month-cell.today{border-color:var(--accent);color:#fff;}
+.month-cell.today{border-color:#ffffffb0;color:#fff;}
 .month-cell.has-record{
-  background:#1a2a20;border-color:var(--good);color:#fff;
+  /* --dojo: その日に記録した道場の色（monthNotes.jsで設定） */
+  background:color-mix(in srgb, var(--dojo, var(--good)) 16%, var(--panel2));
+  border-color:var(--dojo, var(--good));color:#fff;
+}
+.month-cell .marks{
+  display:flex;gap:3px;position:absolute;bottom:5px;
 }
 .month-cell .mark{
-  width:8px;height:8px;border-radius:50%;background:var(--good);
-  position:absolute;bottom:5px;
+  width:7px;height:7px;border-radius:50%;background:var(--good);
+}
+.dojo-legend{
+  display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:12px;
+}
+.dojo-tag{
+  display:inline-block;font-size:10px;font-weight:700;
+  padding:1px 7px;margin-right:6px;border:1px solid;border-radius:6px;
+}
+/* ── ノート入力：道場の選択 ── */
+.modal-dojo-picker{display:flex;gap:6px;}
+.modal-dojo-btn{
+  flex:1;position:relative;padding:10px 4px;border-radius:8px;
+  border:1px solid var(--border);background:var(--panel2);
+  color:var(--sub);font-size:12px;font-weight:700;font-family:var(--font-body);cursor:pointer;
+}
+.modal-dojo-btn.active{
+  border-color:var(--dojo);color:#fff;
+  background:color-mix(in srgb, var(--dojo) 22%, var(--panel2));
+}
+.modal-dojo-dot{
+  position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--dojo);
 }
 .past-summary{
   margin-top:14px;

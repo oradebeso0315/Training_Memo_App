@@ -1,7 +1,7 @@
 /**
- * 練習ノートの入力モーダル（受けたクラスの選択＋メモ＋GeminiのFB）
+ * 練習ノートの入力モーダル（道場の選択＋受けたクラスの選択＋メモ＋GeminiのFB）
  */
-import { state, getNote } from "../core/state.js";
+import { state, getNote, hasContent } from "../core/state.js";
 import { saveNote } from "../core/store.js";
 import { rerender } from "../core/render.js";
 import { getFeedback, hasApiKey } from "../core/gemini.js";
@@ -9,9 +9,29 @@ import { SCHEDULES } from "../data/schedules.js";
 import { getClassColor } from "../data/skills.js";
 import { escapeHtml, escapeAttr, parseYmd, dayKeyOf, DOW_LABELS } from "../core/utils.js";
 
-export function openNoteModal(date, dojo){
-  dojo = dojo || state.settings.dojo;
-  const note = getNote(dojo, date) || {text:"", fb:"", classes:[]};
+/**
+ * @param {string} date  "YYYY-MM-DD"
+ * @param {object} opt
+ *   dojos … 選べる道場の配列（1つだけなら道場の選択欄は出さない）
+ *   dojo  … 最初に選んでおく道場（省略時は自動で決める）
+ */
+export function openNoteModal(date, {dojos, dojo} = {}){
+  dojos = dojos && dojos.length ? dojos : [state.settings.dojo];
+  dojo = dojo || pickDefaultDojo(date, dojos);
+  renderModal(date, dojos, dojo);
+}
+
+// その日にすでに記録がある道場 → 上で選んでいる道場 → 先頭の道場 の順で選ぶ
+function pickDefaultDojo(date, dojos){
+  const recorded = dojos.find(dj=> hasContent(getNote(dj, date)));
+  if(recorded) return recorded;
+  if(dojos.includes(state.settings.dojo)) return state.settings.dojo;
+  return dojos[0];
+}
+
+function renderModal(date, dojos, dojo, carryText){
+  const saved = getNote(dojo, date);
+  const note = saved || {text: carryText ?? "", fb:"", classes:[]};
   const sched = SCHEDULES[dojo];
 
   // その日の曜日のクラスを候補にする（フリートレーニングは除く）
@@ -20,14 +40,28 @@ export function openNoteModal(date, dojo){
   const d = parseYmd(date);
   const dateLabel = `${d.getMonth()+1}月${d.getDate()}日（${DOW_LABELS[d.getDay()]}）`;
 
+  const dojoPicker = dojos.length<=1 ? '' : `
+    <div class="card-title" style="margin-top:14px;">道場</div>
+    <div class="modal-dojo-picker">
+      ${dojos.map(dj=>{
+        const s = SCHEDULES[dj];
+        const has = hasContent(getNote(dj, date));
+        return `
+          <button class="modal-dojo-btn ${dj===dojo?'active':''}" data-dojo="${dj}" style="--dojo:${s.color}">
+            ${s.short}${has?'<span class="modal-dojo-dot"></span>':''}
+          </button>`;
+      }).join('')}
+    </div>`;
+
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="modal-overlay" id="modalOverlay">
-      <div class="modal">
+      <div class="modal" style="border-top:3px solid ${sched.color}">
         <div class="modal-header">
           <div class="modal-class">${dateLabel}</div>
-          <div class="modal-time">${sched.name}（${sched.sub}）</div>
+          <div class="modal-time" style="color:${sched.color}">${sched.name}（${sched.sub}）</div>
         </div>
+        ${dojoPicker}
         <div class="card-title" style="margin-top:14px;">行ったクラス（複数選択可）</div>
         <div class="class-picker">
           ${candidates.length===0 ? '<div class="empty">この曜日のクラスはありません。</div>' : ''}
@@ -57,6 +91,14 @@ export function openNoteModal(date, dojo){
   document.getElementById('closeModal').onclick = closeModal;
   document.getElementById('modalOverlay').addEventListener('click', e=>{
     if(e.target.id==='modalOverlay') closeModal();
+  });
+  root.querySelectorAll('.modal-dojo-btn').forEach(btn=>{
+    btn.onclick = ()=>{
+      if(btn.dataset.dojo===dojo) return;
+      // まだ保存していない道場で書きかけたメモは、切り替え先に記録がなければ引き継ぐ
+      const typed = document.getElementById('noteText').value;
+      renderModal(date, dojos, btn.dataset.dojo, saved ? undefined : typed);
+    };
   });
   document.getElementById('saveNote').onclick = ()=> onSave(dojo, date, note.fb);
 }

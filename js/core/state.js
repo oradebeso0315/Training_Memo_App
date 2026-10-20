@@ -50,10 +50,12 @@ export function hasContent(note){
 }
 
 // 条件に合うノートを日付順で返す
-export function listNotes({dojo=null, monthPrefix=null, newestFirst=false} = {}){
+// dojo: 1つの道場に絞る / dojos: 複数の道場に絞る（どちらもなければ全道場）
+export function listNotes({dojo=null, dojos=null, monthPrefix=null, newestFirst=false} = {}){
   return Object.values(state.notes)
     .filter(n=> hasContent(n))
     .filter(n=> !dojo || n.dojo===dojo)
+    .filter(n=> !dojos || dojos.includes(n.dojo))
     .filter(n=> !monthPrefix || n.date.startsWith(monthPrefix))
     .sort((a,b)=> newestFirst ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date));
 }
